@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+outputs/
+outputs/report/allure_results/
+outputs/tracing/
+node_modules/
+playwright/.cache/
+.auth/
+*.log
+*.zip
+*.tgz
+config/env/.env

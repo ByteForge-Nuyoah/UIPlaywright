@@ -1,0 +1,24 @@
+# generate by pycharm
+.idea
+.pytest_cache/
+__pycache__/
+*.pytest_cache/
+*__pycache__/
+
+# code related
+outputs/
+outputs/report/allure_results/
+outputs/tracing/
+Pipfile.lock
+.log
+*.log
+.auth
+.cache/
+.venv/
+node_modules/
+playwright/.cache/
+*.zip
+*.tgz
+
+# env files
+config/env/.env

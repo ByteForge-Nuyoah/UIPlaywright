@@ -1,0 +1,19 @@
+account_cases:
+  - title: "创建新账号成功_标准流程"
+    phone: "18108047253"
+    name: "自动化测试用户01"
+    user_name: "autotest_user_01"
+    password: "Password123!"
+    run: true
+  # - title: "创建新账号失败_手机号已存在"
+  #   phone: "18108047253"
+  #   name: "自动化测试用户02"
+  #   user_name: "autotest_user_02"
+  #   password: "Password123!"
+  #   run: true
+  # - title: "创建新账号失败_用户名已存在"
+  #   phone: "18108047254"
+  #   name: "自动化测试用户03"
+  #   user_name: "autotest_user_03"
+  #   password: "Password123!"
+  #   run: true

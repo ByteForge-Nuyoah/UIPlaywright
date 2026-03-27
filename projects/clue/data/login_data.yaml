@@ -1,0 +1,25 @@
+login_cases:
+  - title: "网页登录，正确用户名和密码登录成功"
+    login: "${admin_user_name}"
+    password: "${admin_user_password}"
+    run: true
+  # - title: "网页登录，错误用户名登录失败"
+  #   login: "nonexistent_user"
+  #   password: "${admin_user_password}"
+  #   run: true
+  # - title: "网页登录，错误密码登录失败"
+  #   login: "${admin_user_name}"
+  #   password: "incorrect_password"
+  #   run: true
+  # - title: "网页登录，空用户名登录失败"
+  #   login: ""
+  #   password: "${admin_user_password}"
+  #   run: true
+  # - title: "网页登录，空密码登录失败"
+  #   login: "${admin_user_name}"
+  #   password: ""
+  #   run: true
+  # - title: "网页登录，空用户名和空密码登录失败"
+  #   login: ""
+  #   password: ""
+  #   run: true

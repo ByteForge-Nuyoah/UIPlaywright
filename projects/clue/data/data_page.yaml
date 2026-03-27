@@ -1,0 +1,15 @@
+data_cases:
+  - title: "欢迎页交互_标准流程"
+    month_text: "1月"
+    range_label: "一年"
+    scope_label: "所有"
+    company_title: "钉钉集团"
+    company_index: 1
+    run: true
+  # - title: "欢迎页交互_点击第一个公司卡片"
+  #   month_text: "1月"
+  #   range_label: "一年"
+  #   scope_label: "所有"
+  #   company_title: "钉钉集团"
+  #   company_index: 0
+  #   run: true
