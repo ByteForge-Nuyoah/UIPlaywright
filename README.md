@@ -133,29 +133,9 @@ python run.py -project clue -env test -mode headless -report no -m login
 # 仅运行账号相关用例
 python run.py -project clue -env test -mode headless -report no -m account
 ```
-
-### 演示模式：自适应屏幕大小
-
-在做培训 / 现场演示时，推荐使用 **headed 模式**。框架会自动做以下处理：
-
-- 通过 `--start-maximized` 参数最大化浏览器窗口
-- 将 Playwright 的 `viewport` 设置为 `None`，视口尺寸跟随实际窗口大小，自适应当前屏幕
-- 在回归 / CI 场景仍使用固定分辨率（默认 `1920x1080`，由 `GLOBAL_VARS["window_size"]` 控制），保证结果稳定可比
-
-演示场景示例命令：
-
-```bash
-# 登录场景演示（自适应屏幕大小，不生成报告）
-python run.py -m login -mode headed -report no
-
-# 账号场景演示（自适应屏幕大小，生成并保留报告）
-python run.py -m account -mode headed -report yes
-```
-
 ### 多项目切换注意事项
 
 框架通过 `-project` 参数实现多项目隔离运行，使用时需注意以下几点：
-
 1.  **目录规范**：项目必须位于 `projects/` 目录下，且文件夹名称与 `-project` 参数完全一致。
 2.  **配置隔离**：
     *   每个项目必须包含独立的 `project_settings.py`。
@@ -426,21 +406,6 @@ python utils/tools/script_converter.py --input recorded_script.py --output ./out
 --output  : 输出目录
 --page-name: 生成的 Page 对象名称
 ```
-
-#### 方式二：转换原始操作序列
-
-适用于 `clue.md` 格式的原始操作序列。
-
-```bash
-# 基本用法
-python utils/tools/raw_script_converter.py --input operations.txt --output ./output --page-name Example
-
-# 参数说明
---input   : 原始操作序列文件路径
---output  : 输出目录
---page-name: 生成的 Page 对象名称
-```
-
 ### 3. 转换后的代码结构
 
 转换工具会生成以下文件：
@@ -457,7 +422,6 @@ output/
 from utils.base_utils.base_page import BasePage
 from playwright.sync_api import Page
 from loguru import logger
-
 
 class ExamplePage(BasePage):
     """Example页面"""
