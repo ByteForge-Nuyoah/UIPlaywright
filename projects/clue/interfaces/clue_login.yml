@@ -1,0 +1,29 @@
+ -
+   id: clue_login
+   title: 登录接口
+   url: /api/clue/v1/admin/login
+   method: POST
+   headers:
+    Content-Type: application/json; charset=utf-8;
+    Origin: https://clue-dev.spreadwin.cn
+   request_type: json
+   payload:
+     user_name: "${user_name}"
+     password: "${password}"
+     login_type: "${login_type}"
+     uuid: "${uuid}"
+     sms_state: "${sms_state}"
+   assert_response:
+     status_code: 200
+     assertCode:
+       message: 断言接口返回码为0
+       expect_value: 0
+       assert_type: ==
+       type_jsonpath: $.code
+     assertUserName:
+       message: 断言接口返回的user_name
+       expect_value: xiaojing
+       assert_type: ==
+       type_jsonpath: $.data.account.user_name
+   assert_sql:
+   extract:
