@@ -3,16 +3,18 @@
 # @Author  : 会飞的🐟
 # @File    : test_create_account.py
 # @Software: PyCharm
-# @Desc: 创建账号测试用例
+# @Desc    : 创建账号测试用例（演示 HomePage → AccountPage 链式跳转）
+
+import os
 
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-from pages.login_page import LoginPage
-from pages.account.account_page import AccountPage
+
 from config.global_vars import GLOBAL_VARS
-import os
+from pages.home_page import HomePage
 from utils.files_utils.yaml_handle import YamlHandle
+
 
 @pytest.mark.account
 class TestCreateAccount:
@@ -24,38 +26,37 @@ class TestCreateAccount:
 
     @pytest.fixture(autouse=True)
     def setup_teardown_for_each(self, page: Page):
+        """
+        page fixture 已通过 projects/clue/testcases/conftest.py 的 storage_state
+        默认携带登录态。这里只需打开首页 → 由 HomePage 派发到 AccountPage，
+        即可在用例里走完整的 PO 链。
+        """
         logger.info("\n\n---------------Start: 开始测试创建账号-------------")
-        # 登录
-        self.login_page = LoginPage(page)
-        self.login_page.navigate()
-        # 使用配置文件中的用户名密码登录
-        self.login_page.login_on_page_flow(login=GLOBAL_VARS.get("admin_user_name"),
-                                           password=str(GLOBAL_VARS.get("admin_user_password")))
-
-        # 初始化账号页面
-        self.account_page = AccountPage(page)
-
+        page.goto(GLOBAL_VARS["url"])
+        # 入口只持有 HomePage；具体子 PO 由它的导航方法返回
+        self.home_page = HomePage(page)
         yield
-
-        # 清除登录cookies，避免影响其他登录用例
-        page.context.clear_cookies()
 
     @pytest.mark.parametrize("case", cases["account_cases"], ids=lambda x: x["title"])
     def test_create_account_success(self, case):
         """
-        测试创建新账号：根据标题判断成功或失败并断言结果
+        创建新账号：演示从首页 → 账号管理页 → 创建账号 的完整链式 PO 流转。
         """
         phone = case.get("phone")
         name = case.get("name")
         user_name = case.get("user_name")
         password = case.get("password")
+        title = case.get("title", "")
 
-        # 执行创建账号流程
-        self.account_page.create_account_flow(phone=phone, name=name, user_name=user_name, password=password)
+        # 链式 PO：HomePage → AccountPage → 完整创建流程，全链路一气呵成
+        account_page = (
+            self.home_page
+            .goto_account_management()
+            .create_account_flow(phone=phone, name=name, user_name=user_name, password=password)
+        )
 
         # 断言结果
-        title = case.get("title", "")
         if "成功" in title:
-            self.account_page.assert_create_success(user_name=user_name)
+            account_page.assert_create_success(user_name=user_name)
         else:
-            self.account_page.assert_create_failed(keyword="已存在")
+            account_page.assert_create_failed(keyword="已存在")
