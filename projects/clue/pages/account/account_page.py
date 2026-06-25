@@ -3,7 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : account_page.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc    : 账号管理页 PO
 
 import allure
 from utils.base_utils.base_page import BasePage
@@ -26,87 +26,101 @@ class AccountPage(BasePage):
     @allure.step("点击【账号管理】菜单")
     def click_menu_account_management(self):
         self.click(self.locator_menu_account_management)
+        return self
 
     @allure.step("点击【新建账号】按钮")
     def click_btn_new_account(self):
         self.click(self.locator_btn_new_account)
-        # 使用智能等待替代强制等待，等待弹窗出现
+        # 智能等待替代强制等待，等待弹窗出现
         self.assert_element_visible(self.locator_btn_account_type)
+        return self
 
     @allure.step("选择账号类型")
     def select_account_type(self):
         self.click(self.locator_btn_account_type)
+        return self
 
     @allure.step("选择角色")
     def select_role(self):
         self.click(self.locator_checkbox_role)
+        return self
 
     @allure.step("输入手机号：{phone}")
     def input_phone(self, phone):
         self.input(self.locator_input_phone, phone)
+        return self
 
     @allure.step("输入姓名：{name}")
     def input_name(self, name):
         self.input(self.locator_input_name, name)
+        return self
 
     @allure.step("输入账号名称：{user_name}")
     def input_user_name(self, user_name):
         self.input(self.locator_input_user_name, user_name)
+        return self
 
     @allure.step("输入密码：{password}")
     def input_password(self, password):
         self.input(self.locator_input_password, password)
+        return self
 
     @allure.step("选择账号状态")
     def select_status(self):
         self.click(self.locator_radio_status)
+        return self
 
     @allure.step("选择导出状态")
     def select_allow_export(self):
         self.click(self.locator_radio_allow_export)
+        return self
 
     @allure.step("选择导出敏感信息状态")
     def select_allow_export_sensitive(self):
         try:
-            # Try to click with a short timeout, as this field might be hidden if Export is disabled
+            # 短超时尝试点击；若导出关闭则该字段隐藏，跳过即可
             self.page.click(self.locator_radio_allow_export_sensitive, timeout=3000)
         except Exception as e:
             print(f"Skipping allow_export_sensitive selection: {e}")
+        return self
 
     @allure.step("点击【确定】按钮")
     def click_confirm(self):
         self.click(self.locator_btn_confirm)
+        return self
 
     @allure.step("断言创建账号成功，校验用户名：{user_name}")
     def assert_create_success(self, user_name: str):
         """
-        断言创建账号成功：
-        1. 校验页面出现新账号用户名
+        断言创建账号成功：校验页面出现新账号用户名
         """
         self.assert_element_visible(f"text={user_name}")
+        return self
 
     @allure.step("断言创建账号失败，校验错误信息包含：{keyword}")
     def assert_create_failed(self, keyword: str = "已存在"):
         """
-        断言创建账号失败：
-        1. 校验页面出现错误提示关键字（默认：已存在）
+        断言创建账号失败：校验页面出现错误提示关键字
         """
         self.assert_element_visible(f"text={keyword}")
+        return self
 
     @allure.step("创建账号流程")
     def create_account_flow(self, phone, name, user_name, password):
         """
-        完整创建账号流程
+        完整创建账号流程；仍停留在账号管理页，故返回 self。
         """
-        self.click_menu_account_management()
-        self.click_btn_new_account()
-        self.select_account_type()
-        self.select_role()
-        self.input_phone(phone)
-        self.input_name(name)
-        self.input_user_name(user_name)
-        self.input_password(password)
-        self.select_status()
-        self.select_allow_export()
-        self.select_allow_export_sensitive()
-        self.click_confirm()
+        (self
+         .click_menu_account_management()
+         .click_btn_new_account()
+         .select_account_type()
+         .select_role()
+         .input_phone(phone)
+         .input_name(name)
+         .input_user_name(user_name)
+         .input_password(password)
+         .select_status()
+         .select_allow_export()
+         .select_allow_export_sensitive()
+         .click_confirm())
+        return self
