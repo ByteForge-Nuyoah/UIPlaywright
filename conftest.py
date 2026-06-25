@@ -17,7 +17,10 @@ from config.settings import RunConfig
 from utils.data_utils.data_handle import data_handle
 
 # 本地插件注册
-pytest_plugins = ['plugins.pytest_playwright']  # noqa
+pytest_plugins = [
+    'plugins.pytest_playwright',
+    'plugins.allure_fixture_filter',  # 过滤 Allure Set up/Tear down 区域的内部噪声 fixture
+]  # noqa
 """
 添加本地插件后需要在 pytest.ini 中禁用 pip 安装的 pytest-playwright 插件
 [pytest]
