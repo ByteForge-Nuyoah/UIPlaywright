@@ -3,15 +3,16 @@
 # @Author  : 会飞的🐟
 # @File    : test_data_page.py
 # @Software: PyCharm
-# @Desc: 欢迎页/数据概览交互用例
+# @Desc    : 欢迎页/数据概览交互用例（演示 HomePage → DataPage 链式）
 
 import os
+
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-from pages.login_page import LoginPage
-from pages.data.data_page import DataPage
+
 from config.global_vars import GLOBAL_VARS
+from pages.home_page import HomePage
 from utils.files_utils.yaml_handle import YamlHandle
 
 
@@ -27,31 +28,28 @@ class TestDataPage:
     @pytest.fixture(autouse=True)
     def setup_teardown_for_each(self, page: Page):
         """
-        登录并进入欢迎页
+        page fixture 已通过项目级 conftest 注入 storage_state（默认携带登录态）。
+        入口统一通过 HomePage 派发，体现完整 PO 链。
         """
         logger.info("\n\n---------------Start: 欢迎页交互测试-------------")
-        self.login_page = LoginPage(page)
-        self.login_page.navigate()
-        self.login_page.login_on_page_flow(
-            login=str(GLOBAL_VARS.get("admin_user_name")),
-            password=str(GLOBAL_VARS.get("admin_user_password")),
-        )
-        self.data_page = DataPage(page)
-        self.data_page.navigate()
+        # 先到 /welcome，再由 HomePage 派发到 DataPage
+        page.goto(GLOBAL_VARS["url"])
+        self.home_page = HomePage(page)
         yield
-        page.context.clear_cookies()
 
     @pytest.mark.parametrize("case", cases["data_cases"], ids=lambda x: x["title"])
     def test_data_interaction(self, case):
         """
-        欢迎页交互：按录制脚本还原流程
+        欢迎页交互：HomePage → DataPage 链式调用执行完整流程。
         """
-        self.data_page.data_interaction_flow(
-            month_text=case.get("month_text", "1月"),
-            range_label=case.get("range_label", "一年"),
-            scope_label=case.get("scope_label", "所有"),
-            company_title=case.get("company_title", "钉钉集团"),
-            company_index=int(case.get("company_index", 1)),
-        )
-        # 基础断言：仍处于欢迎页
-        self.data_page.assert_url_contains(url="/welcome")
+        # PO 链：HomePage → DataPage → 完整交互流程 → 断言
+        (self.home_page
+            .goto_data()
+            .data_interaction_flow(
+                month_text=case.get("month_text", "1月"),
+                range_label=case.get("range_label", "一年"),
+                scope_label=case.get("scope_label", "所有"),
+                company_title=case.get("company_title", "钉钉集团"),
+                company_index=int(case.get("company_index", 1)),
+            )
+            .assert_url_contains(url="/welcome"))
