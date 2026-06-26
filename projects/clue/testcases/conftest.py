@@ -16,8 +16,22 @@ from config.path_config import AUTH_DIR
 AUTH_STATE_PATH = os.path.join(AUTH_DIR, "clue_state.json")
 
 
+def _opts_out_of_storage_state(item) -> bool:
+    """用例是否通过 `@pytest.mark.browser_context_args(storage_state=None)` 主动放弃预登录态。"""
+    sentinel = object()
+    for mark in item.iter_markers("browser_context_args"):
+        if mark.kwargs.get("storage_state", sentinel) is None:
+            return True
+    return False
+
+
+def _session_needs_storage_state(session) -> bool:
+    """Session 中有任一用例没有显式放弃 storage_state 时，需要预登录。"""
+    return any(not _opts_out_of_storage_state(item) for item in session.items)
+
+
 @pytest.fixture(scope="session")
-def storage_state_path(browser: Browser):
+def storage_state_path(request, browser: Browser):
     """
     会话级前置：在一个独立的浏览器 context 里跑一次完整 UI 登录，
     把登录态以 storage_state（cookies + localStorage）形式落盘到 .auth/clue_state.json，
@@ -27,7 +41,14 @@ def storage_state_path(browser: Browser):
     2. 创建独立 context，不复用 `browser_context_args`，避免循环依赖
        （browser_context_args 反过来要依赖本 fixture）。
     3. 失败时返回 None，浏览器以未登录态启动，让具体业务断言报真实错误。
+    4. 按需触发：当 session 内所有用例都显式 `@pytest.mark.browser_context_args(storage_state=None)`
+       —— 比如只跑 `-m login`，登录用例本身要测登录流程，预登录就是浪费 —— 直接跳过预登录。
     """
+    # 按需触发：检测 session 中是否还有用例需要预登录的 storage_state
+    if not _session_needs_storage_state(request.session):
+        logger.info("Session 中所有用例均已显式 storage_state=None，跳过预登录")
+        return None
+
     # 提前检测管理员账号密码是否注入，避免空凭据登录导致 15s 超时与下游用例混乱失败
     if not GLOBAL_VARS.get("admin_user_name") or not GLOBAL_VARS.get("admin_user_password"):
         raise RuntimeError(
