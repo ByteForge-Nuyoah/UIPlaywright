@@ -62,7 +62,11 @@ class BasePage:
     @allure.step("--> 强制等待{timeout}秒")
     def wait(self, timeout=3):
         """
-        强制等待，官方默认单位是毫秒，这里的timeout传参默认单位是秒
+        强制等待，官方默认单位是毫秒，这里的timeout传参默认单位是秒。
+
+        ⚠️ 仅在 Playwright 的 auto-wait/`expect()` 无法覆盖（如等待外部异步副作用、
+        debug 排查）时使用；常规场景请优先用 `wait_for_load_state` 或
+        `expect(locator).to_be_visible(...)` 等基于条件的等待。
         """
         logger.info(f'--> 强制等待{timeout}秒')
         self.page.wait_for_timeout(timeout * 1000)
@@ -197,7 +201,8 @@ class BasePage:
             logger.info(f"--> 上传文件： {file_path} | 元素定位： {locator}")
             allure.attach.file(file_path, name=file_path)
             self.page.set_input_files(selector=locator, files=file_path)
-            self.wait(timeout=1)
+            # 不再强制 sleep，Playwright 的 set_input_files 本身已等待 DOM 处理；
+            # 上传后的可见性 / 列表项更新由调用方用 expect() 断言驱动。
         else:
             logger.error(f"ERROR --> 上传文件失败，附件未找到，请检查{file_path}下是否存在该文件")
             raise ValueError(f"--> 上传文件失败，附件未找到，请检查{file_path}下是否存在该文件")
