@@ -23,7 +23,7 @@
        type_jsonpath: $.code
      assertUserName:
        message: 断言接口返回的user_name
-       expect_value: xiaojing
+       expect_value: "${user_name}"
        assert_type: ==
        type_jsonpath: $.data.account.user_name
    assert_sql:
