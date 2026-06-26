@@ -77,7 +77,7 @@ def response_extract(response: APIResponse, expr: str = '.'):
 
 
 if __name__ == '__main__':
-    obj = [{'id': 1, 'user_id': 102, 'action': 'autologin', 'value': '3734462a398eedd9ab7448c4e2880ddd3f9bb2cb'}]
+    obj = [{'id': 1, 'user_id': 102, 'action': 'autologin', 'value': 'example_autologin_value'}]
     expre = "'user_id': (.*?),"
 
     res = re_extract(obj=str(obj), expr=expre)
