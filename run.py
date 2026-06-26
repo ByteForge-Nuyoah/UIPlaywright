@@ -22,6 +22,7 @@
 
 import os
 import argparse
+import shutil
 import sys
 import importlib.util
 import pytest
@@ -31,7 +32,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', '
 from config.settings import LOG_INFO, RunConfig
 ENV_VARS = {}
 from config.global_vars import GLOBAL_VARS
-from config.path_config import BASE_DIR, REPORT_DIR, TRACING_DIR, CONF_DIR, ALLURE_RESULTS_DIR, ALLURE_HTML_DIR
+from config.path_config import BASE_DIR, REPORT_DIR, TRACING_DIR, CONF_DIR, ALLURE_RESULTS_DIR, ALLURE_HTML_DIR, AUTH_DIR
 from utils.report_utils.send_result_handle import send_result
 from utils.logger_utils.loguru_log import capture_logs
 from utils.report_utils.allure_handle import generate_allure_report
@@ -119,6 +120,20 @@ def run(**kwargs):
 
         # ------------------------ 捕获日志----------------------------
         # ------------------------ 设置pytest相关参数 ------------------------
+        # 已经清了 allure_results，这里把 tracing 一起清掉，保证 setUp 时是干净状态。
+        if os.path.isdir(TRACING_DIR):
+            shutil.rmtree(TRACING_DIR, ignore_errors=True)
+        os.makedirs(TRACING_DIR, exist_ok=True)
+        logger.info(f"已清空测试产物目录：{TRACING_DIR}")
+
+        # -fresh-login：擦掉上一次 run 留下的 storage_state（含 JWT），
+        # 缩短 token 静态留存窗口；也作为未来 cache 化的旁路开关。
+        if kwargs.get("fresh_login"):
+            if os.path.isdir(AUTH_DIR):
+                shutil.rmtree(AUTH_DIR, ignore_errors=True)
+            os.makedirs(AUTH_DIR, exist_ok=True)
+            logger.info(f"已清空登录态目录（-fresh-login）：{AUTH_DIR}")
+
         # 统一使用列表形式拼接，避免 `"--browser xxx"` 这种字符串被 pytest.main 当成单个参数解析失败
         arg_list = [
             "-vs",
@@ -231,6 +246,8 @@ if __name__ == '__main__':
     parser.add_argument("-recording", default="converted",
                         help="选择运行录制脚本模式：converted（默认）| raw | all")
     parser.add_argument("-video", default="off", help="是否开启视频录制：on, off, retain-on-failure")
+    parser.add_argument("-fresh-login", dest="fresh_login", action="store_true",
+                        help="启动前清空 .auth/（含上次 run 留下的 JWT），强制重新走 UI 登录")
     args = parser.parse_args()
     run(**vars(args))
 
