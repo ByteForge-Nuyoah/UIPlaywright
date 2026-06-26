@@ -1,0 +1,80 @@
+# -*- coding: utf-8 -*-
+# @Version: Python 3.13
+# @File    : allure_playwright_attach.py
+# @Desc    : 将 pytest-playwright 在测试失败时落盘的截图 / 视频 / trace 自动附到 Allure 报告。
+#
+# 历史：项目原本 fork 了一份 595 行的 `plugins/pytest_playwright.py`，
+# 只是为了在 ArtifactsRecorder 里多调用三处 `allure.attach.file(...)`。
+# 该 fork 维护成本高（要持续合并上游变更）。
+# 本插件用 ~30 行的 pytest 钩子取而代之：上游 pytest-playwright 仍负责落盘，
+# 我们在测试结束后扫描产物目录并把媒体文件挂到 Allure。
+
+from pathlib import Path
+from typing import Optional
+
+import pytest
+
+
+def _get_allure() -> Optional[object]:
+    try:
+        import allure  # noqa: WPS433 — 延迟导入避免无 allure 环境下报错
+        return allure
+    except ImportError:
+        return None
+
+
+def _attach_dir(folder: Path, allure_mod) -> None:
+    """扫描目录下的 .png/.webm/.zip 附件，挂到 Allure 报告。"""
+    if not folder.exists() or not folder.is_dir():
+        return
+    for f in folder.rglob("*"):
+        if not f.is_file():
+            continue
+        suffix = f.suffix.lower()
+        if suffix == ".png":
+            allure_mod.attach.file(str(f), name=f.name,
+                                   attachment_type=allure_mod.attachment_type.PNG)
+        elif suffix == ".webm":
+            allure_mod.attach.file(str(f), name=f.name,
+                                   attachment_type=allure_mod.attachment_type.WEBM)
+        elif suffix == ".zip":
+            # trace.zip：Allure 没有 ZIP 媒体类型，用通用附件
+            allure_mod.attach.file(str(f), name=f.name, extension="zip")
+
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    """记录 call 阶段是否失败，供 teardown 后扫描决定是否上传产物。"""
+    outcome = yield
+    report = outcome.get_result()
+    if report.when == "call":
+        item._pw_failed = getattr(item, "_pw_failed", False) or report.failed
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_teardown(item, nextitem):
+    """fixture teardown 跑完后，pytest-playwright 已把视频/截图/trace 写盘。
+    若本用例失败，则把对应产物目录里的媒体文件挂到 Allure。"""
+    yield
+    if not getattr(item, "_pw_failed", False):
+        return
+    allure_mod = _get_allure()
+    if allure_mod is None:
+        return
+
+    output_root = Path(item.config.getoption("--output", default="test-results"))
+    if not output_root.exists():
+        return
+
+    # pytest-playwright 使用 slugify(nodeid)（可能再截断）作为每用例的子目录名。
+    # 这里挑两个最常见的候选位置，命中其一即可。
+    try:
+        from slugify import slugify
+    except ImportError:
+        # 极端兜底：扫描整个 output 根目录（成本可控，仅失败用例触发）
+        _attach_dir(output_root, allure_mod)
+        return
+
+    candidates = {output_root / slugify(item.nodeid), output_root / slugify(item.name)}
+    for c in candidates:
+        _attach_dir(c, allure_mod)
