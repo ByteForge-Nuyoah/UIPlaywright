@@ -30,6 +30,6 @@ class TestExportRecord:
         self.page_obj = ExportPage(page)
         yield
 
-    @pytest.mark.parametrize("case", cases["export_record_cases"], ids=lambda x: x["title"])
+    @pytest.mark.parametrize("case", cases["export_cases"], ids=lambda x: x["title"])
     def test_recorded_flow(self, case):
         self.page_obj.export_record_flow(case)
