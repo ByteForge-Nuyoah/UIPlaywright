@@ -31,7 +31,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', '
 from config.settings import LOG_INFO, RunConfig
 ENV_VARS = {}
 from config.global_vars import GLOBAL_VARS
-from config.path_config import REPORT_DIR, TRACING_DIR, CONF_DIR, ALLURE_RESULTS_DIR, ALLURE_HTML_DIR
+from config.path_config import BASE_DIR, REPORT_DIR, TRACING_DIR, CONF_DIR, ALLURE_RESULTS_DIR, ALLURE_HTML_DIR
 from utils.report_utils.send_result_handle import send_result
 from utils.logger_utils.loguru_log import capture_logs
 from utils.report_utils.allure_handle import generate_allure_report
@@ -73,15 +73,16 @@ def run(**kwargs):
         # Load Project Configuration
         # 这一块代码负责根据命令行参数 dynamic load 项目特有的配置和测试用例
         project_test_path = ""
+        project_recordings_path = ""
         if project_name:
-            # 构造项目根路径：当前工作目录/projects/项目名
-            project_path = os.path.join(os.getcwd(), "projects", project_name)
+            # 构造项目根路径：基于仓库根 BASE_DIR，避免依赖调用方的 cwd
+            project_path = os.path.join(BASE_DIR, "projects", project_name)
             if os.path.exists(project_path):
                 # 将项目路径插入 sys.path，使得我们可以直接 import 该项目下的模块 (如 pages)
                 # 这是一个常用的 Python 技巧，用于动态调整模块搜索路径
                 sys.path.insert(0, project_path)
                 logger.info(f"Loaded project path: {project_path}")
-                
+
                 # 设定测试用例路径：projects/项目名/testcases
                 project_test_path = os.path.join(project_path, "testcases")
                 # 设定录制脚本路径：projects/项目名/playwrightScript
@@ -94,7 +95,7 @@ def run(**kwargs):
                     spec = importlib.util.spec_from_file_location("project_settings", settings_path)
                     project_settings = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(project_settings)
-                    
+
                     # 提取项目配置中的 ENV_VARS 并覆盖全局 ENV_VARS
                     if hasattr(project_settings, "ENV_VARS"):
                         global ENV_VARS
@@ -118,36 +119,39 @@ def run(**kwargs):
 
         # ------------------------ 捕获日志----------------------------
         # ------------------------ 设置pytest相关参数 ------------------------
-        arg_list = ["-vs", f"--maxfail={RunConfig.max_fail}", f"--reruns={RunConfig.rerun}",
-                    f"--reruns-delay={RunConfig.reruns_delay}", f'--alluredir={ALLURE_RESULTS_DIR}',
-                    '--clean-alluredir', f"--output={TRACING_DIR}"]
+        # 统一使用列表形式拼接，避免 `"--browser xxx"` 这种字符串被 pytest.main 当成单个参数解析失败
+        arg_list = [
+            "-vs",
+            f"--maxfail={RunConfig.max_fail}",
+            f"--reruns={RunConfig.rerun}",
+            f"--reruns-delay={RunConfig.reruns_delay}",
+            f"--alluredir={ALLURE_RESULTS_DIR}",
+            "--clean-alluredir",
+            f"--output={TRACING_DIR}",
+        ]
 
         if RunConfig.video:
-             arg_list.append(f"--video={RunConfig.video}")
+            arg_list.extend(["--video", RunConfig.video])
 
         if RunConfig.mode == "headed":
             arg_list.append("--headed")
 
-        # 浏览器可以配置为列表，表示同时在多个内核（例如 chromium + webkit）上执行
-        if isinstance(RunConfig.browser, list):
-            for browser in RunConfig.browser:
-                arg_list.append(f"--browser={browser.lower()}")
-
-        # 也可以只配置单个字符串，表示在单一浏览器上执行
-        if isinstance(RunConfig.browser, str):
-            arg_list.append(f"--browser {RunConfig.browser.lower()}")
+        # 浏览器支持单字符串或列表（多内核并跑），统一展开为多组 ["--browser", name]
+        browsers = RunConfig.browser if isinstance(RunConfig.browser, list) else [RunConfig.browser]
+        for b in browsers:
+            arg_list.extend(["--browser", str(b).lower()])
 
         if marks:
-            arg_list.append(f"-m {marks}")
+            arg_list.extend(["-m", marks])
         
         # Add test path
         if custom_test_path:
             arg_list.append(custom_test_path)
         else:
             # 根据 recording_mode 选择测试来源
-            if recording_mode == "raw" and 'project_recordings_path' in locals():
+            if recording_mode == "raw" and project_recordings_path:
                 arg_list.append(project_recordings_path)
-            elif recording_mode == "all" and 'project_recordings_path' in locals():
+            elif recording_mode == "all" and project_recordings_path:
                 if project_test_path:
                     arg_list.append(project_test_path)
                 arg_list.append(project_recordings_path)
