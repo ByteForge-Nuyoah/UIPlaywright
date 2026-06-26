@@ -443,13 +443,13 @@ if __name__ == '__main__':
         "assigned_id": [],
         '报告标题': 'UI自动化测试报告', '项目名称': 'GitLink 确实开源', 'tester': '陈银花',
         'department': '开源中心', 'env': 'https://testforgeplus.trustie.net',
-        'host': 'https://testforgeplus.trustie.net', 'login': 'autotest',
-        'nickname': 'autotest', 'user_id': 106, 'super_login': 'floraachy', 'super_user_id': 103,
+        'host': 'https://testforgeplus.trustie.net', 'login': 'example_user',
+        'nickname': 'example_user', 'user_id': 106, 'super_login': 'example_admin', 'super_user_id': 103,
         'project_id': '59',
         'repo_id': '59', 'project_url': '/autotest/auotest',
         'attachment_ids': ['85b7f7ff-59e6-4f38-88da-29440aa4fc18', 'ba23f9b1-ad92-476d-ac4d-aba1382a9636'],
         'file_name': 'gitlinklogo3.jpg',
-        'cookies': '{"_educoder_session": "d79e0e75f71cd98a9df2665d405b49e7", "autologin_trustie": "d25b412c26388182a50e8be38e4b9731c4e783ba"}',
+        'cookies': '{"_educoder_session": "example_session_value", "autologin_trustie": "example_autologin_value"}',
     }
 
     new = data_handle(obj=data, source=source)
