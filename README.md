@@ -355,8 +355,8 @@ ENV_VARS = {
     "test": {
         "url": "https://clue-dev.spreadwin.cn",
         "host": "https://clueapi-dev.spreadwin.cn",
-        "admin_user_name": os.getenv("CLUE_ADMIN_USER", "xiaojing"),
-        "admin_user_password": os.getenv("CLUE_ADMIN_PASSWORD", "qwer123"),
+        "admin_user_name": os.getenv("CLUE_ADMIN_USER", ""),
+        "admin_user_password": os.getenv("CLUE_ADMIN_PASSWORD", ""),
         "login_type": "PASSWD",
         "uuid": "",
         "sms_state": "LOGIN",
@@ -395,76 +395,4 @@ payload:
 
 ```bash
 python run.py -project clue -env test -mode headless -browser chromium -report no -m <marker>
-```
-
-Page Object 建议格式参考 `account_page.py`：
-
-```python
-class ExamplePage(BasePage):
-    locator_btn_search = "xpath=//button[span[normalize-space()='查 询']]"
-
-    @allure.step("点击【查询】按钮")
-    def click_search(self):
-        self.click(self.locator_btn_search)
-        return self
-
-    @allure.step("查询流程")
-    def search_flow(self, keyword):
-        self.input_keyword(keyword).click_search()
-        return self
-```
-
-## 十三、Playwright 使用手册（Python 同步 API）
-
-### 选择器与 Locator
-
-```python
-page.locator(".btn.primary").first.click()
-page.get_by_text("登录").click()
-page.get_by_role("button", name="提交").click()
-```
-
-### 等待与断言
-
-```python
-from playwright.sync_api import expect
-
-expect(page.locator("#status")).to_contain_text("成功", timeout=5000)
-expect(page).to_have_url(re.compile("/welcome"))
-```
-
-### 文件下载
-
-```python
-with page.expect_download() as download_info:
-    page.click("text=导出")
-download = download_info.value
-```
-
-### 与本框架结合
-
-- Page 层封装页面元素和动作。
-- Test 层只表达业务意图。
-- Data 层放 YAML 测试数据。
-- 优先使用 `BasePage` 封装方法，避免测试用例里直接堆录制代码。
-
-## 十四、常见问题
-
-### 1. 元素定位失败
-
-可能原因：页面加载慢、浮层遮挡、录制定位器包含图标文本、Ant Design DOM 变化。
-
-建议：
-
-- 用更稳定的文本或 `id` / `aria-label`。
-- 对日期选择器限定 `.ant-picker-dropdown`。
-- 对弹窗限定 `role='dialog'` 或 `.ant-modal`。
-- 运行单个 marker 快速定位问题。
-
-### 2. 用例被跳过
-
-如果 YAML 中 `run: false` 或缺少 `run` 字段，框架收集阶段可能跳过该 case。建议显式写：
-
-```yaml
-run: true
 ```
