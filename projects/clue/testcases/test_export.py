@@ -15,10 +15,10 @@ from pages.export.export_page import ExportPage
 
 
 
-@pytest.mark.export_record
+@pytest.mark.export
 @pytest.mark.recordings
 class TestExportRecord:
-    """ExportRecordPage录制流程"""
+    """Export"""
 
     data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "export.yaml")
     cases = YamlHandle(data_path).read_yaml
