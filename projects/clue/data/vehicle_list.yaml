@@ -1,0 +1,4 @@
+vehicle_list_cases:
+  - title: 车辆列表-筛选与导出
+    run: true
+    device_no: "869497052182449"
