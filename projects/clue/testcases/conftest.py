@@ -28,6 +28,13 @@ def storage_state_path(browser: Browser):
        （browser_context_args 反过来要依赖本 fixture）。
     3. 失败时返回 None，浏览器以未登录态启动，让具体业务断言报真实错误。
     """
+    # 提前检测管理员账号密码是否注入，避免空凭据登录导致 15s 超时与下游用例混乱失败
+    if not GLOBAL_VARS.get("admin_user_name") or not GLOBAL_VARS.get("admin_user_password"):
+        raise RuntimeError(
+            "CLUE_ADMIN_USER / CLUE_ADMIN_PASSWORD 未配置，请通过本地 .env 或 CI Secret 注入"
+            "（参考 config/env/.env.example）"
+        )
+
     logger.info("\n-------------- Start: 预登录以获取 storage_state ----------------")
     context = browser.new_context(
         base_url=GLOBAL_VARS["url"],
