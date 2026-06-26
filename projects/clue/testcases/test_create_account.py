@@ -43,7 +43,10 @@ class TestCreateAccount:
         phone = case.get("phone")
         name = case.get("name")
         user_name = case.get("user_name")
-        password = case.get("password")
+        # 账号密码从环境变量注入，不在仓库内保留默认明文值
+        password = os.getenv("CLUE_TEST_ACCOUNT_PASSWORD")
+        if not password:
+            pytest.skip("CLUE_TEST_ACCOUNT_PASSWORD 未配置，跳过创建账号用例")
         title = case.get("title", "")
 
         # 链式 PO：HomePage → AccountPage → 完整创建流程，全链路一气呵成
