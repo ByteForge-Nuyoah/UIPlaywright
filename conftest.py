@@ -36,21 +36,15 @@ def browser_context_args(browser_context_args):
     pytest-playwright 内置 fixture 覆写
     作用域：session (整个测试会话期间只执行一次)
     功能：
-    1. 在演示模式（headed）下，自适应当前屏幕尺寸（viewport=None）
-    2. 在回归/CI 模式（headless）下使用固定分辨率，保证结果稳定
+    1. headed 模式下使用大视口，避免浏览器最大化但页面仍按默认小视口渲染
+    2. headless/CI 模式下使用固定分辨率，保证结果稳定
     """
-    # 默认窗口尺寸配置，用于回归/CI 等非演示场景
-    window_size = GLOBAL_VARS.get("window_size", {"width": 1920, "height": 1080})
-
-    # headed 模式下：让 Playwright 使用真实窗口尺寸，自适应屏幕大小
-    if RunConfig.mode == "headed":
-        viewport = None
-    else:
-        viewport = window_size
+    window_size = GLOBAL_VARS.get("window_size") or RunConfig.window_size or {"width": 1920, "height": 1080}
 
     return {
         **browser_context_args,
-        "viewport": viewport,
+        "viewport": window_size,
+        "screen": window_size,
         "record_video_size": window_size,  # 录制视频尺寸保持统一，便于对比
     }
 
@@ -62,9 +56,16 @@ def browser_type_launch_args(browser_type_launch_args):
     作用域：session
     功能：配置浏览器启动参数，如是否最大化窗口、是否开启开发者工具等
     """
+    window_size = GLOBAL_VARS.get("window_size") or RunConfig.window_size or {"width": 1920, "height": 1080}
+    args = list(browser_type_launch_args.get("args", []))
+    args.extend([
+        "--start-maximized",
+        f"--window-size={window_size['width']},{window_size['height']}",
+    ])
+
     return {
         **browser_type_launch_args,
-        "args": ["--start-maximized"],  # 浏览器窗口最大化
+        "args": args,
         "devtools": False,
     }
 
