@@ -28,7 +28,7 @@ class MysqlServer:
                      f"db_host: {db_host}\n" \
                      f"db_port: {db_port}\n" \
                      f"db_user: {db_user}\n" \
-                     f"db_pwd: {db_pwd}\n" \
+                     "db_pwd: <redacted>\n" \
                      f"db_database: {db_database}\n" \
                      f"ssh: {ssh}\n" \
                      f"kwargs: {kwargs}\n" \
