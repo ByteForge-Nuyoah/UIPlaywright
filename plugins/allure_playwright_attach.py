@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @File    : allure_playwright_attach.py
-# @Desc    : 将 pytest-playwright 在测试失败时落盘的截图 / 视频 / trace 自动附到 Allure 报告。
+# @Desc    : 将 pytest-playwright 落盘的截图 / 视频 / trace 自动附到 Allure 报告。
+# 文件是否存在由 pytest-playwright 的开关决定：
+#     --screenshot=on              每条用例都保存截图（成功 + 失败）
+#     --video=retain-on-failure    仅失败用例保留视频
+#     --tracing=retain-on-failure  仅失败用例保留 trace.zip
 
 from pathlib import Path
 from typing import Optional
@@ -36,22 +40,11 @@ def _attach_dir(folder: Path, allure_mod) -> None:
             allure_mod.attach.file(str(f), name=f.name, extension="zip")
 
 
-@pytest.hookimpl(hookwrapper=True, tryfirst=True)
-def pytest_runtest_makereport(item, call):
-    """记录 call 阶段是否失败，供 teardown 后扫描决定是否上传产物。"""
-    outcome = yield
-    report = outcome.get_result()
-    if report.when == "call":
-        item._pw_failed = getattr(item, "_pw_failed", False) or report.failed
-
-
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_teardown(item, nextitem):
-    """fixture teardown 跑完后，pytest-playwright 已把视频/截图/trace 写盘。
-    若本用例失败，则把对应产物目录里的媒体文件挂到 Allure。"""
+    """fixture teardown 跑完后，pytest-playwright 已把媒体文件写盘；
+    扫描产物目录把媒体文件挂到 Allure（成功 / 失败都挂）。"""
     yield
-    if not getattr(item, "_pw_failed", False):
-        return
     allure_mod = _get_allure()
     if allure_mod is None:
         return
@@ -65,7 +58,7 @@ def pytest_runtest_teardown(item, nextitem):
     try:
         from slugify import slugify
     except ImportError:
-        # 极端兜底：扫描整个 output 根目录（成本可控，仅失败用例触发）
+        # 极端兜底：扫描整个 output 根目录（成本可控，单条用例 teardown 触发）
         _attach_dir(output_root, allure_mod)
         return
 
