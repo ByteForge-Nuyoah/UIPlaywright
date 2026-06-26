@@ -6,6 +6,7 @@
 # @Desc    : 登录页
 
 import allure
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from utils.base_utils.base_page import BasePage
 
 
@@ -63,6 +64,11 @@ class LoginPage(BasePage):
          .input_username_on_page(login)
          .input_password_on_page(password)
          .submit_login_on_page())
-        # 给前端一点时间完成路由跳转 / 错误提示渲染
-        self.page.wait_for_timeout(3000)
+        # 提交后：成功跳走 /user/login，失败仍停留。
+        # 使用 Playwright 自动等待替代 wait_for_timeout：URL 离开登录页即返回；若
+        # 仍停留（失败路径）超时即可，调用方会再用 assert_url_contains 做最终断言。
+        try:
+            self.page.wait_for_url(lambda url: "/user/login" not in url, timeout=5000)
+        except PlaywrightTimeoutError:
+            pass
         return HomePage(self.page)
