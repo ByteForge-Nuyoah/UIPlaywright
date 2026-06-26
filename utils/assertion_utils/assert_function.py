@@ -5,8 +5,8 @@
 # @Software: PyCharm
 # @Desc: 断言方法
 
-from typing import Any, Union, Text
 import allure
+from typing import Any, Union, Text
 
 
 @allure.step("预期结果：{expect_value}  == 实际结果：{actual_value}")

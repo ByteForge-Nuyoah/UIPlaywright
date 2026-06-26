@@ -3,13 +3,14 @@
 # @Author  : 会飞的🐟
 # @File    : faker_handle.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc: 测试数据生成类
 
+import re
 import random
 import string
-import re
-from datetime import datetime, date, timedelta
 from faker import Faker
+from datetime import datetime, date, timedelta
+
 
 
 class FakerData:

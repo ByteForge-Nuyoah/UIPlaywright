@@ -3,7 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : allure_handle.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc: allure测试报告美化
 
 import os
 import json

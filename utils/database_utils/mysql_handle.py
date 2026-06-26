@@ -5,12 +5,12 @@
 # @Software: PyCharm
 # @Desc: 使用pymysql模块连接mysql数据库的公共方法
 
-from typing import Union
 import json
-from datetime import datetime
 import pymysql
-from sshtunnel import SSHTunnelForwarder  # pip install sshtunnel
 from loguru import logger
+from typing import Union
+from datetime import datetime
+from sshtunnel import SSHTunnelForwarder  # pip install sshtunnel
 
 
 class MysqlServer:

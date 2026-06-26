@@ -3,11 +3,11 @@
 # @Author  : 会飞的🐟
 # @File    : base_request.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc: 接口请求
 
+from loguru import logger
 from typing import Optional, Dict, Any
 from playwright.sync_api import BrowserContext, Page, APIRequestContext
-from loguru import logger
 
 
 class BaseRequest:

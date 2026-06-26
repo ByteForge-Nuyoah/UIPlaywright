@@ -3,7 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : aes_encrypt_decrypt.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc: AES 加密解密
 
 """
 @FileName：aes_encrypt_decrypt.py

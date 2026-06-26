@@ -3,16 +3,14 @@
 # @Author  : 会飞的🐟
 # @File    : test_create_account.py
 # @Software: PyCharm
-# @Desc    : 创建账号测试用例（演示 HomePage → AccountPage 链式跳转）
+# @Desc    : 创建账号测试用例
 
 import os
-
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-
-from config.global_vars import GLOBAL_VARS
 from pages.home_page import HomePage
+from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
 
 

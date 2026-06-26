@@ -7,12 +7,11 @@
 
 import os
 import re
-from typing import Union, Pattern, Optional, Literal, AnyStr
 import allure
 from loguru import logger
 from playwright.sync_api import Page
 from playwright.sync_api import expect
-
+from typing import Union, Pattern, Optional, Literal, AnyStr
 
 class BasePage:
     """

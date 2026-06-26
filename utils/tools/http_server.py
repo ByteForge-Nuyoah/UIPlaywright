@@ -5,10 +5,10 @@
 # @Software: PyCharm
 # @Desc: 封装的HTTP服务
 
-import http.server
-import socketserver
 import os
 import sys
+import http.server
+import socketserver
 from functools import partial
 
 

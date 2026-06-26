@@ -7,12 +7,13 @@
 
 import types
 import allure
-from playwright.sync_api import APIResponse
 from loguru import logger
 from utils.models import AssertMethod
+from playwright.sync_api import APIResponse
 from utils.assertion_utils import assert_function
-from utils.data_utils.extract_data_handle import json_extractor, re_extract
 from utils.database_utils.mysql_handle import MysqlServer
+from utils.data_utils.extract_data_handle import json_extractor, re_extract
+
 
 
 class AssertUtils:

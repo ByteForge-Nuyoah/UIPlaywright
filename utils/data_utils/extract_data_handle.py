@@ -7,8 +7,8 @@
 
 import re
 import json
-from jsonpath import jsonpath
 from loguru import logger
+from jsonpath import jsonpath
 from playwright.sync_api import APIResponse
 from utils.data_utils.data_handle import data_handle
 

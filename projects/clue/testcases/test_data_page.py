@@ -3,16 +3,14 @@
 # @Author  : 会飞的🐟
 # @File    : test_data_page.py
 # @Software: PyCharm
-# @Desc    : 欢迎页/数据概览交互用例（演示 HomePage → DataPage 链式）
+# @Desc    : 欢迎页/数据概览交互用例
 
 import os
-
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-
-from config.global_vars import GLOBAL_VARS
 from pages.home_page import HomePage
+from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
 
 

@@ -1,16 +1,4 @@
-# ============================================================
-# Clue 系统：管理员登录接口定义（保留备用，当前未被自动加载）
-#
-# 当前 conftest.py 走的是 UI 预登录（token 写在 localStorage，纯 API 拿不到）。
-# 这份 YAML 保留是为了：
-#   1. 将来若做接口级用例 / 回归，可直接 RequestControl.api_request_flow() 复用
-#   2. 调试登录接口本身（4xx / 5xx）时可作为最小可运行样例
-#
-# 模板变量 ${...} 由 utils.data_utils.data_handle 在请求前替换：
-#   - ${url}     → 当前环境域名（GLOBAL_VARS["url"]）；用于通过 Origin 白名单
-#   - ${user_*}  → 由调用方传入的 source_data 提供
-# ============================================================
- -
+-
    id: clue_login
    title: 登录接口
    url: /api/clue/v1/admin/login

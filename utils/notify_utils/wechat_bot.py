@@ -6,12 +6,11 @@
 # @Desc: 企业微信机器人
 
 import os
-from requests import request
+import re
 import base64
 import hashlib
-import re
 from loguru import logger
-
+from requests import request
 
 class WechatBot:
     """

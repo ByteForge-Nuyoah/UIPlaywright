@@ -3,24 +3,24 @@
 # @Author  : 会飞的🐟
 # @File    : data_handle.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc: 数据处理类
 
-import random  # 导包不能移除，否则random.choice这种就不能处理了
-import json
-import re, uuid
 import os
-import base64
-from datetime import datetime, timedelta
+import json
 import copy
+import base64
+import random  # 导包不能移除，否则random.choice这种就不能处理了
+import re, uuid
 from loguru import logger
 from string import Template
+from config.path_config import FILES_DIR
+from datetime import datetime, timedelta
 from requests.cookies import RequestsCookieJar
 from requests.utils import dict_from_cookiejar
+from utils.tools.aes_encrypt_decrypt import Encrypt
 from utils.data_utils.faker_handle import FakerData
 from utils.data_utils.eval_data_handle import eval_data
 from utils.files_utils.files_handle import file_to_base64, filepath_to_base64, get_files
-from config.path_config import FILES_DIR
-from utils.tools.aes_encrypt_decrypt import Encrypt
 
 
 class DataHandle:

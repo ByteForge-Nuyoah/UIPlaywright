@@ -1,5 +1,5 @@
 account_cases:
-  - title: "创建新账号成功_标准流程"
+  - title: "创建新账号成功"
     phone: "18108047253"
     name: "自动化测试用户01"
     user_name: "autotest_user_01"

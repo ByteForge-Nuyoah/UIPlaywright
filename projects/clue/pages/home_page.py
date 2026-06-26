@@ -11,13 +11,7 @@ from utils.base_utils.base_page import BasePage
 
 class HomePage(BasePage):
     """
-    系统首页（登录成功后的着陆页 /welcome）。
-
-    设计意图：
-    1. 作为登录后的统一入口，承担「菜单 / 顶栏 / 全局校验」类职责。
-    2. 通过 goto_xxx() 方法显式返回下一个 PO，实现链式调用：
-           login_page.login_on_page_flow(...).goto_account_management().create_account_flow(...)
-       而不是在测试用例里到处 new 子 PO。
+    系统首页（登录成功后的着陆页 /welcome
     """
 
     # 顶部用户信息（登录成功后会出现，可用于校验登录态）

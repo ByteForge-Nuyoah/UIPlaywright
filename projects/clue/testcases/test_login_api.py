@@ -6,10 +6,8 @@
 # @Desc    : Clue 登录接口用例
 
 import os
-
 import pytest
 from playwright.sync_api import Playwright
-
 from config.global_vars import GLOBAL_VARS
 from utils.base_utils.request_control import RequestControl
 

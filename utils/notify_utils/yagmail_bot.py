@@ -6,8 +6,8 @@
 # @Desc: 通过第三方模块yagmail发送邮件
 
 import os
-from loguru import logger
 import yagmail
+from loguru import logger
 
 
 class YagEmailServe:

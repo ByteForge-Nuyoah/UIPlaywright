@@ -3,21 +3,20 @@
 # @Author  : 会飞的🐟
 # @File    : request_control.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc: 请求处理类
 
 import os
 import allure
 from loguru import logger
-from playwright.sync_api import sync_playwright, BrowserContext, Page, APIRequestContext, APIResponse
-from utils.base_utils.base_request import BaseRequest
-from utils.data_utils.data_handle import data_handle, eval_data
-from utils.data_utils.extract_data_handle import json_extractor, re_extract, response_extract
-from utils.report_utils.allure_handle import allure_step
-from utils.assertion_utils.assert_control import AssertHandle
 from utils.files_utils.yaml_handle import YamlHandle
 from utils.files_utils.files_handle import get_files
+from utils.base_utils.base_request import BaseRequest
+from utils.report_utils.allure_handle import allure_step
 from utils.database_utils.mysql_handle import MysqlServer
-
+from utils.assertion_utils.assert_control import AssertHandle
+from utils.data_utils.data_handle import data_handle, eval_data
+from utils.data_utils.extract_data_handle import json_extractor, re_extract, response_extract
+from playwright.sync_api import sync_playwright, BrowserContext, Page, APIRequestContext, APIResponse
 
 class RequestControl(BaseRequest):
     """

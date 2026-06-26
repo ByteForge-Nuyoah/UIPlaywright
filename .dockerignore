@@ -1,15 +1,49 @@
+# Git / local metadata
+.git
+.gitignore
+.gitattributes
+.DS_Store
+.idea/
+.vscode/
+.omc/
+.claude/
+
+# Python caches / virtualenvs
 .venv/
+venv/
 __pycache__/
-.pytest_cache/
-*.pyc
+*__pycache__/
+*.py[cod]
 *.pyo
-outputs/
-outputs/report/allure_results/
-outputs/tracing/
-node_modules/
-playwright/.cache/
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Test/runtime artifacts
 .auth/
+outputs/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Logs / generated archives
 *.log
 *.zip
 *.tgz
+*.tar.gz
+
+# Local env / secrets
+.env
+.env.*
 config/env/.env
+
+# Node / misc caches
+node_modules/
+.cache/
+
+# Files not needed for container runtime
+README.md
+lib/allure-2.42.1/

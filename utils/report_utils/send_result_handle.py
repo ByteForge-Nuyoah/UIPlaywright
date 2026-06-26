@@ -7,14 +7,13 @@
 
 from loguru import logger
 from utils.models import NotificationType
+from utils.data_utils.data_handle import data_handle
+from utils.notify_utils.wechat_bot import WechatBot
+from utils.notify_utils.dingding_bot import DingTalkBot
+from utils.notify_utils.yagmail_bot import YagEmailServe
+from utils.report_utils.get_results_handle import get_test_results_from_from_allure_report
 from config.settings import SEND_RESULT_TYPE, email, ding_talk, wechat, email_subject, email_content, ding_talk_title, \
     ding_talk_content, wechat_content
-from utils.data_utils.data_handle import data_handle
-from utils.report_utils.get_results_handle import get_test_results_from_from_allure_report
-from utils.notify_utils.dingding_bot import DingTalkBot
-from utils.notify_utils.wechat_bot import WechatBot
-from utils.notify_utils.yagmail_bot import YagEmailServe
-
 
 def send_email(user, pwd, host, subject, content, to, attachments):
     """

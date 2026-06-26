@@ -3,7 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : account_page.py
 # @Software: PyCharm
-# @Desc    : 账号管理页 PO
+# @Desc    : 账号管理页
 
 import allure
 from utils.base_utils.base_page import BasePage

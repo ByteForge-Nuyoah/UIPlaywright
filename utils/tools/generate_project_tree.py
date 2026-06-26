@@ -3,14 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : generate_project_tree.py
 # @Software: PyCharm
-# @Desc: TODO: Description
-
-# -*- coding: utf-8 -*-
-# @Time    : 2024/7/3 14:16
-# @Author  : floraachy
-# @File    : 11
-# @Software: PyCharm
-# @Desc:
+# @Desc: 生成项目目录树
 
 import re
 from pathlib import Path

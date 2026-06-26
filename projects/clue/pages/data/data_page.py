@@ -3,9 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : data_page.py
 # @Software: PyCharm
-# @Desc    : 数据概览/欢迎页交互 PO
-#
-# 约定：所有单步动作 return self，flow 方法默认 return self（仍停留在本页）。
+# @Desc    : 数据概览/欢迎页交互
 
 import allure
 from utils.base_utils.base_page import BasePage

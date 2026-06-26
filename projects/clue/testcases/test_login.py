@@ -3,7 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : test_login.py
 # @Software: PyCharm
-# @Desc    : 登录功能测试用例（演示 PO 链式返回）
+# @Desc    : 登录功能测试用例
 
 import os
 

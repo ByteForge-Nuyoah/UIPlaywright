@@ -1,24 +1,51 @@
-# generate by pycharm
-.idea
-.pytest_cache/
-__pycache__/
-*.pytest_cache/
-*__pycache__/
+# macOS / OS files
+.DS_Store
+.AppleDouble
+.LSOverride
 
-# code related
-outputs/
-outputs/report/allure_results/
-outputs/tracing/
-Pipfile.lock
-.log
-*.log
-.auth
-.cache/
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
 .venv/
-node_modules/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Playwright / test artifacts
+.auth/
+outputs/
 playwright/.cache/
+test-results/
+playwright-report/
+
+# Logs / reports / archives
+*.log
 *.zip
 *.tgz
+*.tar.gz
 
-# env files
+# Local env / secrets
 config/env/.env
+.env
+.env.*
+!.env.example
+!config/env/.env.example
+
+# Node / misc caches
+node_modules/
+.cache/
+
+# OMC / Claude local state
+.omc/
+.claude/

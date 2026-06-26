@@ -1,91 +1,105 @@
 # UI Automation Framework (Playwright + Pytest)
 
-基于 Playwright + Pytest的UI自动化测试框架。支持多项目管理、多环境配置、数据驱动、Allure 可视化报告以及 CI/CD 流水线集成。
+基于 **Playwright + Pytest** 的 UI/API 自动化测试框架。当前示例项目为 `clue`，支持 Page Object、YAML 数据驱动、项目级环境配置、Allure 报告、录制脚本转换、Docker 容器运行和 GitHub Actions。
 
 ## 一、核心特性
 
-- **多项目架构**：一套框架支持多个业务线的自动化测试。
-- **环境隔离**：支持 `test` / `live` 等多环境切换，敏感配置通过 `.env` 管理。
-- **POM 设计模式**：页面对象模型 (Page Object Model) 实现业务逻辑与测试脚本分离。
-- **增强断言体系**：基于 `expect` 封装了 `assert_text_contains`、`assert_element_visible` 等智能等待断言，告别不稳定 `sleep`。
-- **数据驱动**：支持 YAML 数据文件分离，实现测试数据与代码解耦。
-- **可视化报告**：集成 Allure Report，自动捕获失败截图、日志和详细步骤。
-- **CI/CD 就绪**：内置 GitHub Actions、GitLab CI、Gitee Go 配置文件。
-- **脚本转换工具**：支持将 Playwright 录制脚本自动转换为 POM 格式。
+- **多项目架构**：通过 `projects/<project>` 隔离业务项目，目前默认项目为 `clue`。
+- **多环境配置**：项目环境在 `projects/<project>/project_settings.py` 中维护；`clue` 当前支持 `test` / `prod`。
+- **POM 设计模式**：页面对象模型（Page Object Model）将页面操作与测试用例分离。
+- **框架封装操作**：Page 层优先使用 `BasePage.click()`、`BasePage.input()`、`BasePage.press()` 和封装断言，统一日志与 Allure 步骤。
+- **YAML 数据驱动**：测试数据放在 `projects/<project>/data/*.yaml`，测试代码只表达流程。
+- **UI + API 混合测试**：UI 用例在 `testcases`，接口定义在 `interfaces/*.yml`。
+- **Allure 报告**：支持生成 `outputs/report/allure_html`、压缩报告 `outputs/report/autotest_report.zip`。
+- **录制脚本转换工具**：支持将 Playwright codegen 片段转换为 Page Object + data YAML + testcase 三件套。
+- **Docker 运行**：提供 `Dockerfile`、`.dockerignore`，基于官方 Playwright Python 镜像。
 
 ## 二、项目结构
 
 ```text
 uiPlaywright/
-├── config/                 # 全局配置中心
-│   ├── env/                # 环境变量目录
-│   │   ├── .env            # 敏感配置 (用户手动创建)
-│   │   └── .env.example    # 配置模板
-│   ├── settings.py         # 配置加载器
-│   └── ...
-├── projects/               # 业务项目目录 (多租户支持)
-│   └── clue/               # 示例项目：线索管理系统
-│       ├── data/                 # 测试数据 (YAML)
+├── config/
+│   ├── env/
+│   │   ├── .env.example          # 环境变量模板
+│   │   └── .env                  # 本地敏感配置，需手动创建，不提交
+│   ├── path_config.py            # 路径配置
+│   ├── settings.py               # 运行配置 RunConfig
+│   └── global_vars.py            # 运行期全局变量
+├── projects/
+│   └── clue/
+│       ├── project_settings.py   # clue 项目环境配置：test / prod
+│       ├── data/
 │       │   ├── login_data.yaml
 │       │   ├── account_data.yaml
-│       │   └── data_page.yaml
-│       ├── pages/                # 页面对象 (封装页面元素与操作)
-│       │   ├── login_page.py
-│       │   ├── account/
-│       │   │   └── account_page.py
-│       │   └── data/
-│       │       └── data_page.py
-│       ├── testcases/            # 测试用例 (Pytest)
-│       │   ├── test_login.py
-│       │   ├── test_create_account.py
-│       │   └── test_data_page.py
-│       ├── interfaces/           # 接口自动化定义 (YAML)
+│       │   ├── data_page.yaml
+│       │   ├── vehicle_list.yaml
+│       │   └── export_record.yaml
+│       ├── interfaces/
 │       │   └── clue_login.yml
-│       └── project_settings.py   # 项目特定配置
-├── utils/                  # 核心工具库
-│   ├── base_utils/         # 基础页面类 (BasePage)
-│   │   └── base_page.py
-│   ├── data_utils/         # 数据处理工具 (YAML, Random)
-│   ├── notify_utils/       # 通知工具 (Email, DingTalk, WeCom)
-│   └── tools/              # 实用工具
-│       ├── script_converter.py    # 录制脚本转换器 (完整pytest脚本)
-│       └── raw_script_converter.py # 原始操作序列转换器
-├── outputs/                # 测试产出物
-│   ├── logs/               # 运行日志
-│   └── report/             # Allure 测试报告
-│       ├── allure_html/
-│       └── allure_results/
-├── run.py                  # 框架统一执行入口
-├── requirements.txt        # 项目依赖清单
-├── pytest.ini              # Pytest 配置与标记声明
-└── .github/                # CI/CD 配置
+│       ├── pages/
+│       │   ├── home_page.py
+│       │   ├── login_page.py
+│       │   ├── account/account_page.py
+│       │   ├── data/data_page.py
+│       │   ├── vehicle/vehicle_list_page.py
+│       │   └── export_record/export_record_page.py
+│       └── testcases/
+│           ├── conftest.py       # clue 项目级 fixture，默认注入登录态
+│           ├── test_login.py
+│           ├── test_login_api.py
+│           ├── test_create_account.py
+│           ├── test_data_page.py
+│           ├── test_vehicle_list.py
+│           └── test_export_record.py
+├── utils/
+│   ├── base_utils/
+│   │   ├── base_page.py          # UI 页面基础封装
+│   │   ├── base_request.py       # API 请求基础封装
+│   │   └── request_control.py    # YAML 接口请求流程
+│   ├── data_utils/               # 变量替换、数据处理、提取器
+│   ├── files_utils/              # YAML / 文件处理
+│   ├── report_utils/             # Allure 报告生成与打包
+│   ├── notify_utils/             # 邮件、钉钉、企业微信通知
+│   └── tools/
+│       ├── po_style_converter.py # 录制片段转 Page/data/testcase 三件套
+│       ├── script_converter.py
+│       └── raw_script_converter.py
+├── files/clue/demo.md            # 录制片段示例
+├── outputs/                      # 测试产物：日志、报告、trace、压缩包
+├── Dockerfile
+├── .dockerignore
+├── .gitignore
+├── pytest.ini                    # pytest 参数与 marker 声明
+├── requirements.txt
+└── run.py                        # 框架统一执行入口
 ```
 
 ## 三、快速开始
 
 ### 1. 环境准备
 
-- **Python**: 推荐 Python 3.9+
-- **操作系统**: macOS / Linux / Windows
+- 推荐 Python：**3.13**（当前 CI/本地验证使用 Python 3.13）
+- 浏览器：Chromium / Firefox / WebKit
+- 报告：如需本地打开 Allure HTML，需 Java + Allure Commandline
 
 ### 2. 安装依赖
 
 ```bash
-# 1. 创建并激活虚拟环境 (推荐)
 python3 -m venv venv
 source venv/bin/activate  # macOS/Linux
 # venv\Scripts\activate   # Windows
 
-# 2. 安装项目依赖
 pip install -r requirements.txt
+playwright install chromium
+```
 
-# 3. 安装 Playwright 浏览器驱动
+如果需要运行全部浏览器：
+
+```bash
 playwright install
 ```
 
-### 3. 配置文件
-
-复制示例配置文件并按需修改：
+### 3. 配置环境变量
 
 ```bash
 cp config/env/.env.example config/env/.env
@@ -93,61 +107,98 @@ cp config/env/.env.example config/env/.env
 
 ## 四、运行测试
 
-框架使用 `run.py` 作为统一入口，支持灵活的参数配置。
+框架统一入口为 `run.py`。
 
 ### 常用参数
 
 | 参数 | 说明 | 默认值 | 可选值 |
 | :--- | :--- | :--- | :--- |
-| `-env` | 运行环境 | `test` | `test`, `live` |
-| `-project` | 指定运行项目 | `clue` | `projects/` 下的目录名 |
-| `-mode` | 浏览器运行模式 | `headless` | `headless` (无头), `headed` (可视化) |
+| `-env` | 运行环境 | `test` | `test`, `prod` |
+| `-project` | 指定项目 | `clue` | `projects/` 下的目录名 |
+| `-mode` | 浏览器模式 | `headed` | `headless`, `headed` |
 | `-browser` | 浏览器类型 | `chromium` | `chromium`, `firefox`, `webkit` |
-| `-report` | 是否生成报告 | `no` | `yes`, `no` |
+| `-report` | 是否生成并打开 Allure 报告 | `yes` | `yes`, `no` |
+| `-m` | pytest marker 筛选 | 无 | `login`, `account`, `data`, `vehicle`, `export_record`, `api`, `recordings` |
+| `-path` | 指定测试文件或目录 | 无 | 任意 pytest 路径 |
+| `-video` | 视频录制 | `off` | `on`, `off`, `retain-on-failure` |
 
-### 运行示例
+### 常用命令
 
 ```bash
-# 1. 默认运行 (无头模式, test环境, clue项目)
+# 默认运行 clue/test，headed 模式，并生成报告
 python run.py
 
-# 2. 可视化调试模式 (开启浏览器界面)
-python run.py -mode headed
+# 推荐本地快速验证：headless，不生成报告
+python run.py -project clue -env test -mode headless -browser chromium -report no
 
-# 3. 指定生产环境运行
-python run.py -env live
+# 可视化调试
+python run.py -project clue -env test -mode headed -browser chromium -report no
 
-# 4. 生成并自动打开 Allure 报告
-python run.py -report yes
-
-# 5. 组合命令 (指定 Firefox 浏览器 + 可视化 + 生成报告)
-python run.py -browser firefox -mode headed -report yes
-```
-
-### 按标记运行示例
-
-```bash
-# 仅运行登录相关用例
+# 只跑登录 UI 用例
 python run.py -project clue -env test -mode headless -report no -m login
 
-# 仅运行账号相关用例
-python run.py -project clue -env test -mode headless -report no -m account
+# 只跑登录 API 用例
+python run.py -project clue -env test -mode headless -report no -m api
+
+# 只跑车辆列表用例
+python run.py -project clue -env test -mode headless -report no -m vehicle
+
+# 只跑导出记录用例
+python run.py -project clue -env test -mode headless -report no -m export
 ```
-### 多项目切换注意事项
 
-框架通过 `-project` 参数实现多项目隔离运行，使用时需注意以下几点：
-1.  **目录规范**：项目必须位于 `projects/` 目录下，且文件夹名称与 `-project` 参数完全一致。
-2.  **配置隔离**：
-    *   每个项目必须包含独立的 `project_settings.py`。
-    *   该文件定义的 `ENV_VARS` 会覆盖全局配置，确保 `test`/`live` 环境地址与当前项目匹配。
-3.  **导包路径**：
-    *   运行时框架会将 `projects/<project_name>` 加入系统路径。
-    *   **代码中请直接 import**，例如 `from pages.login_page import LoginPage`，**不要**带上 `projects.xxx` 前缀，以便代码复用和重构。
-4.  **默认项目**：若未指定 `-project` 参数，默认运行 `clue` 项目（可在 `run.py` 修改默认值）。
+## 五、Allure 报告
 
-## 五、使用增强断言
+### 生成报告
 
-框架在 `BasePage` 中封装了智能等待断言，直接在 Page 类中使用 `self` 调用：
+```bash
+python run.py -project clue -env test -mode headless -browser chromium -report yes
+```
+
+## 六、Docker 运行
+
+项目提供 `Dockerfile` 和 `.dockerignore`，使用官方 Playwright Python 镜像：
+
+```dockerfile
+FROM mcr.microsoft.com/playwright/python:v1.57.0-noble
+```
+
+### 构建镜像
+
+确保 Docker Desktop / Docker daemon 已启动：
+
+```bash
+docker build -t uiplaywright:latest .
+```
+
+### 运行容器
+
+```bash
+docker run --rm uiplaywright:latest
+```
+
+带本地环境变量文件：
+
+```bash
+docker run --rm \
+  --env-file config/env/.env \
+  uiplaywright:latest
+```
+
+覆盖默认命令，例如只跑导出记录：
+
+```bash
+docker run --rm \
+  --env-file config/env/.env \
+  uiplaywright:latest \
+  python run.py -project clue -env test -mode headless -browser chromium -report no -m export
+```
+
+> `.dockerignore` 已排除 `.auth/`、`outputs/`、`.env`、`.omc/`、`.claude/`、本地缓存和报告产物，避免把敏感信息和运行产物打进镜像。
+
+## 七、使用增强断言
+
+框架在 `BasePage` 中封装了智能等待断言，Page 类中通过 `self` 调用：
 
 | 断言方法 | 说明 | 示例 |
 | :--- | :--- | :--- |
@@ -155,26 +206,29 @@ python run.py -project clue -env test -mode headless -report no -m account
 | `assert_text_equals` | 验证元素文本完全等于指定内容 | `self.assert_text_equals("#status", "Active")` |
 | `assert_element_visible` | 验证元素可见 | `self.assert_element_visible("#submit-btn")` |
 | `assert_element_hidden` | 验证元素隐藏 | `self.assert_element_hidden(".loading-spinner")` |
-| `assert_url_contains` | 验证当前 URL 包含指定内容 | `self.assert_url_contains("/dashboard")` |
+| `assert_url_contains` | 验证当前 URL 包含指定内容 | `self.assert_url_contains("/welcome")` |
 | `assert_title_contains` | 验证页面标题包含指定内容 | `self.assert_title_contains("首页")` |
 
-**代码示例 (Page 层):**
+示例：
+
 ```python
 class LoginPage(BasePage):
     def login_success_check(self, username):
-        # 验证 URL 跳转
         self.assert_url_contains("/welcome")
-        # 验证欢迎消息可见
         self.assert_element_visible("#welcome-msg")
-        # 验证用户名显示正确
         self.assert_text_contains("#user-name", username)
+        return self
 ```
 
-## 六、数据驱动与变量引用
+## 八、数据驱动与变量引用
 
-框架支持 YAML 数据驱动，并内置了变量引用机制 (`${var}`)，可动态读取环境变量或配置。
+数据文件放在：
 
-**数据文件示例 (`projects/clue/data/login_data.yaml`):**
+```text
+projects/<project>/data/*.yaml
+```
+
+示例：
 
 ```yaml
 login_cases:
@@ -182,445 +236,235 @@ login_cases:
     login: "${admin_user_name}"
     password: "${admin_user_password}"
     run: true
-  - title: "网页登录，错误用户名登录失败"
-    login: "nonexistent_user"
-    password: "${admin_user_password}"
-    run: true
-  - title: "网页登录，错误密码登录失败"
-    login: "${admin_user_name}"
-    password: "incorrect_password"
-    run: true
 ```
 
-## 七、核心依赖说明
+测试用例读取：
 
-项目基于以下核心库构建 (详见 `requirements.txt`):
+```python
+data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "login_data.yaml")
+cases = YamlHandle(data_path).read_yaml
 
-| 库名称 | 用途 |
-| :--- | :--- |
-| `playwright` | 核心 UI 自动化引擎 |
-| `pytest` | 测试运行器与断言框架 |
-| `pytest-playwright` | Pytest 的 Playwright 插件 |
-| `allure-pytest` | 生成 Allure 测试报告 |
-| `pydantic` | 数据校验与设置管理 |
-| `loguru` | 高性能日志记录 |
-| `PyYAML` | YAML 数据文件解析 |
-| `Faker` | 生成伪造测试数据 |
+@pytest.mark.parametrize("case", cases["login_cases"], ids=lambda x: x["title"])
+def test_login_user(self, case):
+    ...
+```
 
-## 八、Playwright 使用手册（Python 同步 API）
+> `run: false` 的 case 会在收集阶段被框架跳过。
+
+## 九、当前示例用例
+
+### 登录 UI
+
+- Page：`projects/clue/pages/login_page.py`
+- Data：`projects/clue/data/login_data.yaml`
+- Test：`projects/clue/testcases/test_login.py`
+- Marker：`login`
+
+### 登录 API
+
+- Interface：`projects/clue/interfaces/clue_login.yml`
+- Test：`projects/clue/testcases/test_login_api.py`
+- Marker：`api`
+
+运行：
+
+```bash
+python run.py -m api -report no
+```
+
+## 十、录制脚本转换工具
+
+### 推荐工具：`po_style_converter.py`
+
+该工具可以把 Playwright codegen 片段转换为：
+
+```text
+Page Object + data YAML + testcase
+```
+
+输入示例：
+
+```python
+# 导出页面
+page.get_by_role("link", name="to-top 导出记录").click()
+page.get_by_role("button", name="查 询").click()
+page.get_by_role("textbox", name="页").fill("5")
+page.get_by_role("textbox", name="页").press("Enter")
+```
+
+生成三件套：
+
+```bash
+python utils/tools/po_style_converter.py \
+  --input files/clue/demo.md \
+  --class-name ExportRecordPage \
+  --file-name export_page.py \
+  --suite-dir projects/clue \
+  --page-subdir pages/export \
+  --page-import export.export_record_page
+```
+
+生成结果：
+
+```text
+projects/clue/pages/export_record/export_record_page.py
+projects/clue/data/export_record.yaml
+projects/clue/testcases/test_export_record.py
+```
+
+只生成 Page Object：
+
+```bash
+python utils/tools/po_style_converter.py \
+  --input files/clue/demo.md \
+  --class-name ExportRecordPage \
+  --file-name export_page.py \
+  --output projects/clue/pages/export/export_page.py
+```
+
+### 转换后的注意事项
+
+转换结果是初稿，复杂控件通常需要实际运行后微调：
+
+1. **菜单图标 + 文本**：如 `to-top 导出记录` 可能需要改为 `导出记录`。
+2. **日期选择器**：建议限定在当前可见的 `.ant-picker-dropdown` 内。
+3. **Popover/Modal**：导出、确认弹窗类操作需要确认真实 DOM。
+4. **补 marker**：生成新用例后，需要在 `pytest.ini` 添加对应 marker。
+5. **补断言**：录制脚本多为操作步骤，建议在关键业务节点补充断言。
+
+### 其他历史转换工具
+
+- `utils/tools/script_converter.py`：完整 pytest 脚本转换。
+- `utils/tools/raw_script_converter.py`：原始操作序列转换。
+
+后续新录制片段优先使用 `po_style_converter.py`。
+
+## 十一、多环境配置与使用
+
+每个项目通过 `project_settings.py` 定义环境：
+
+```python
+ENV_VARS = {
+    "common": {
+        "报告标题": "UI自动化测试报告-Clue",
+        "项目名称": "clueSystem",
+        "tester": "会飞的🐟",
+        "department": "成都研发后台",
+        "env": "test",
+    },
+    "test": {
+        "url": "https://clue-dev.spreadwin.cn",
+        "host": "https://clueapi-dev.spreadwin.cn",
+        "admin_user_name": os.getenv("CLUE_ADMIN_USER", "xiaojing"),
+        "admin_user_password": os.getenv("CLUE_ADMIN_PASSWORD", "qwer123"),
+        "login_type": "PASSWD",
+        "uuid": "",
+        "sms_state": "LOGIN",
+    },
+    "prod": {
+        "url": "https://clue-dev.spreadwin.cn",
+        "host": "https://clueapi-dev.spreadwin.cn",
+        "admin_user_name": os.getenv("CLUE_ADMIN_USER", ""),
+        "admin_user_password": os.getenv("CLUE_ADMIN_PASSWORD", ""),
+    },
+}
+```
+
+运行时：
+
+```bash
+python run.py -project clue -env test
+python run.py -project clue -env prod
+```
+
+YAML 中可通过 `${var}` 引用配置：
+
+```yaml
+payload:
+  user_name: "${user_name}"
+  password: "${password}"
+```
+
+## 十二、新增一个 UI 用例的建议流程
+
+1. 在 `projects/clue/pages/<module>/` 新增 Page Object。
+2. 在 `projects/clue/data/` 新增 YAML 数据文件。
+3. 在 `projects/clue/testcases/` 新增 `test_<module>.py`。
+4. 在 `pytest.ini` 注册 marker。
+5. 运行单模块验证：
+
+```bash
+python run.py -project clue -env test -mode headless -browser chromium -report no -m <marker>
+```
+
+Page Object 建议格式参考 `account_page.py`：
+
+```python
+class ExamplePage(BasePage):
+    locator_btn_search = "xpath=//button[span[normalize-space()='查 询']]"
+
+    @allure.step("点击【查询】按钮")
+    def click_search(self):
+        self.click(self.locator_btn_search)
+        return self
+
+    @allure.step("查询流程")
+    def search_flow(self, keyword):
+        self.input_keyword(keyword).click_search()
+        return self
+```
+
+## 十三、Playwright 使用手册（Python 同步 API）
 
 ### 选择器与 Locator
 
-- `page.locator("css 或 xpath")`、`page.get_by_text("文本")`、`page.get_by_role("button", name="提交")`
-- `nth(index)` 获取第 N 个匹配元素；`first`/`last` 获取首/末元素
-
 ```python
-locator = page.locator(".btn.primary")
-locator.first.click()
+page.locator(".btn.primary").first.click()
 page.get_by_text("登录").click()
 page.get_by_role("button", name="提交").click()
 ```
 
 ### 等待与断言
 
-- 智能等待：`expect(locator).to_be_visible()` / `to_have_text()` / `to_contain_text()`
-- URL/Title：`expect(page).to_have_url()` / `to_have_title()`
-
 ```python
 from playwright.sync_api import expect
+
 expect(page.locator("#status")).to_contain_text("成功", timeout=5000)
 expect(page).to_have_url(re.compile("/welcome"))
-expect(page).to_have_title(re.compile("首页"))
 ```
 
-### 导航与上下文
-
-- `page.goto(url, timeout=...)` 跳转；`page.reload()`
-- `context = browser.new_context()`；`page = context.new_page()`
-- `storage_state` 保存/加载登录态
+### 文件下载
 
 ```python
-page.goto("https://example.com/login", timeout=30000)
-context.storage_state(path="auth.json")
-context = browser.new_context(storage_state="auth.json")
-page = context.new_page()
-```
-
-### 基本交互
-
-- 点击/输入：`page.click(selector)`、`page.fill(selector, text)`、`page.type(selector, text)`
-- 选择器：`page.select_option("select#role", value="admin")`
-- 悬浮/聚焦：`page.hover(selector)`、`page.focus(selector)`
-
-```python
-page.fill("#user_name", "xiaojing")
-page.fill("#password", "qwer123")
-page.click("xpath=//*[@id='root']/div/div/form/button")
-page.select_option("select#role", value="admin")
-```
-
-### 文件上传与下载
-
-```python
-page.set_input_files("#upload", "path/to/file.png")
 with page.expect_download() as download_info:
     page.click("text=导出")
 download = download_info.value
-download.save_as("outputs/export.xlsx")
 ```
 
-### 弹窗与对话框
+### 与本框架结合
 
-```python
-def on_dialog(dialog):
-    if dialog.type == "alert":
-        dialog.accept()
-page.once("dialog", on_dialog)
-page.click("text=触发弹窗")
-```
+- Page 层封装页面元素和动作。
+- Test 层只表达业务意图。
+- Data 层放 YAML 测试数据。
+- 优先使用 `BasePage` 封装方法，避免测试用例里直接堆录制代码。
 
-### 截图/视频/Tracing
-
-```python
-page.screenshot(path="outputs/snap.png", full_page=True)
-context.tracing.start(screenshots=True, snapshots=True)
-# 执行测试...
-context.tracing.stop(path="outputs/trace.zip")
-```
-
-### 网络与请求拦截
-
-```python
-def handle_route(route):
-    if "config" in route.request.url:
-        route.fulfill(status=200, body='{"feature_flag":true}')
-    else:
-        route.continue_()
-page.route("**/*", handle_route)
-```
-
-### 多窗口与多页面
-
-```python
-with context.expect_page() as new_page_info:
-    page.click("text=在新窗口打开")
-new_page = new_page_info.value
-new_page.wait_for_load_state("networkidle")
-```
-
-### 权限与地理位置
-
-```python
-context = browser.new_context(
-    geolocation={"longitude": 12.4924, "latitude": 41.8902},
-    permissions=["geolocation"]
-)
-page = context.new_page()
-```
-
-### 设备与视口
-
-```python
-context = browser.new_context(viewport={"width": 1920, "height": 1080})
-# 或 headed 模式下让视口跟随窗口
-context = browser.new_context(viewport=None)
-```
-
-### 键盘/鼠标
-
-```python
-page.keyboard.type("Hello, World!")
-page.keyboard.press("Enter")
-page.mouse.move(100, 200)
-page.mouse.click(120, 220)
-```
-
-### 超时与重试
-
-- 全局默认 30s；单操作可覆盖 timeout
-- 期望重试内置于 expect 智能等待
-
-```python
-page.click("#slow-btn", timeout=15000)
-expect(page.locator("#done")).to_be_visible(timeout=10000)
-```
-
-### 并行与标记
-
-- 使用 `pytest -n` 并行（需安装 pytest-xdist）
-- 通过 `-m` 选择性运行：`login`、`account`、`projects`
-
-```bash
-pytest -n auto
-python run.py -m login
-```
-
-### 请求 API（APIRequestContext）
-
-```python
-from playwright.sync_api import sync_playwright
-with sync_playwright() as p:
-    request = p.request.new_context(base_url="https://api.example.com")
-    resp = request.post("/login", data={"user":"xiaojing","pwd":"qwer123"})
-    assert resp.ok
-```
-
-### 与本框架的结合
-
-- 推荐通过 BasePage 封装统一日志与断言（见 [utils/base_utils/base_page.py](file:///Users/nidaye/DevolFiles/PythonProject/uiPlaywright/utils/base_utils/base_page.py)）
-- Page 层只写业务操作；Case 层只表达测试意图；数据从 YAML 注入
-
-## 九、录制脚本转换工具
-
-框架提供了脚本转换工具，可以将 Playwright 录制的脚本自动转换为 POM 格式。
-
-### 1. 录制脚本生成
-
-使用 Playwright 自带录制工具生成 Python 脚本：
-
-```bash
-# 打开录制器并保存为 Python 脚本
-playwright codegen https://clue-dev.spreadwin.cn/welcome \
-  --target python \
-  -b chromium \
-  -o recorded_script.py
-
-# 仅打开录制器（交互结束后手动保存）
-playwright codegen -b chromium https://clue-dev.spreadwin.cn/
-```
-
-### 2. 脚本转换工具
-
-框架提供两种转换工具：
-
-#### 方式一：转换完整的 pytest 脚本
-
-适用于 Playwright codegen 生成的完整 pytest 测试文件。
-
-```bash
-# 基本用法
-python utils/tools/script_converter.py --input recorded_script.py --output ./output --page-name Example
-
-# 参数说明
---input   : 录制的 pytest 脚本路径
---output  : 输出目录
---page-name: 生成的 Page 对象名称
-```
-### 3. 转换后的代码结构
-
-转换工具会生成以下文件：
-
-```
-output/
-├── _example_page.py      # Page 对象（使用 BasePage 封装方法）
-└── test__example.py      # 测试用例
-```
-
-**生成的 Page 对象示例：**
-
-```python
-from utils.base_utils.base_page import BasePage
-from playwright.sync_api import Page
-from loguru import logger
-
-class ExamplePage(BasePage):
-    """Example页面"""
-
-    # 定位器
-    locator_textbox = "role=textbox"
-    locator_button = "role=button"
-
-    def login_flow(self):
-        """执行登录流程"""
-        self.visit("https://example.com/login")
-        self.click(self.locator_textbox)
-        self.input(self.locator_textbox, "admin")
-        self.click(self.locator_button)
-        logger.info("登录流程执行完成")
-```
-
-### 4. 转换后的优化建议
-
-转换后的代码需要手动优化：
-
-1. **优化定位器**：将自动生成的定位器改为更稳定的语义化选择器
-2. **添加断言**：在关键步骤后添加断言验证
-3. **参数化数据**：将硬编码的数据提取到 YAML 文件
-4. **方法拆分**：将长方法拆分为多个小方法，提高可维护性
-
-### 5. 使用框架封装方法的优势
-
-转换工具生成的代码使用框架封装的 `base_page` 方法：
-
-- **统一的日志记录**：所有操作自动记录日志，方便调试
-- **统一的异常处理**：捕获操作失败的情况，提供清晰的错误信息
-- **集成 Allure 报告**：自动添加 Allure 步骤装饰器，测试报告更清晰直观
-- **代码一致性**：所有测试代码使用统一的方法，便于维护和扩展
-
-## 十、多环境配置与使用
-
-### 环境配置入口
-
-每个项目的 `project_settings.py` 定义 `ENV_VARS`，包含 `common` 与具体环境键（如 `test`、`live`）。
-
-**示例：[project_settings.py](file:///Users/nidaye/DevolFiles/PythonProject/uiPlaywright/projects/clue/project_settings.py)**
-
-```python
-ENV_VARS = {
-    "common": {
-        "项目名称": "clueSystem",
-        "报告标题": "UI自动化测试报告-Clue",
-        "env": "test"
-    },
-    "test": {
-        "url": "https://clue-dev.spreadwin.cn",
-        "host": "https://clueapi-dev.spreadwin.cn",
-        "admin_user_name": "xiaojing",
-        "admin_user_password": "qwer123",
-        "login_type": "PASSWD",
-        "uuid": "",
-        "sms_state": "LOGIN"
-    },
-    "live": {
-        "url": "https://your-prod-frontend",
-        "host": "https://your-prod-api",
-        "admin_user_name": "",
-        "admin_user_password": ""
-    }
-}
-```
-
-### 运行时环境选择
-
-使用 `-env` 指定环境，框架会将 `ENV_VARS["common"]` 与 `ENV_VARS[env]` 合并写入 `GLOBAL_VARS`。
-
-```bash
-python run.py -project clue -env test -mode headless -report no
-```
-
-### 数据文件变量引用
-
-YAML 中通过 `${var}` 引用环境变量或配置，运行时由 `GLOBAL_VARS` 解析。
-
-```yaml
-login_cases:
-  - title: "网页登录，正确用户名和密码登录成功"
-    login: "${admin_user_name}"
-    password: "${admin_user_password}"
-    run: true
-```
-
-### 接口环境注入
-
-接口定义文件可引用 `${}` 变量，运行前会注入当前环境的 host、账号等。
-
-**示例：[clue_login.yml](file:///Users/nidaye/DevolFiles/PythonProject/uiPlaywright/projects/clue/interfaces/clue_login.yml)**
-
-### 多项目 × 多环境组合
-
-```bash
-# 指定项目与环境
-python run.py -project projectA -env test
-
-# 结合标记筛选
-python run.py -project projectA -env live -m account
-```
-
-### 新增环境步骤（如 `staging`）
-
-1. 在项目的 `project_settings.py` 中添加 `staging` 键，填入前端 `url` 与接口 `host` 等
-2. 如有环境专属账号或参数，一并添加到该键下
-3. 运行时传入 `-env staging` 即可
-
-## 十一、环境变量与通知 (Secrets)
-
-若需启用邮件、钉钉或企业微信通知，请在 CI/CD 平台配置以下 **Secrets / Variables**：
-
-- `EMAIL_USER` / `EMAIL_PASSWORD` / `EMAIL_HOST` / `EMAIL_TO`
-- `DINGTALK_WEBHOOK`
-- `WECHAT_WEBHOOK`
-
-## 十二、最佳实践
-
-### 1. Page 对象设计原则
-
-- **单一职责**：每个 Page 类只负责一个页面
-- **封装细节**：将元素定位和操作细节封装在 Page 类中
-- **语义化方法**：方法名应表达业务含义，如 `login()`、`create_order()`
-
-### 2. 测试用例编写原则
-
-- **独立性**：每个测试用例应独立运行，不依赖其他用例
-- **可重复性**：测试结果应稳定可重复
-- **清晰性**：用例名称和步骤应清晰明了
-
-### 3. 数据管理原则
-
-- **数据分离**：测试数据与代码分离，存储在 YAML 文件中
-- **变量引用**：使用 `${var}` 引用环境配置，避免硬编码
-- **数据有效性**：确保测试数据的有效性和时效性
-
-### 4. 断言策略
-
-- **关键路径断言**：在关键业务步骤后添加断言
-- **智能等待**：使用框架封装的断言方法，自动等待元素状态
-- **明确断言**：断言应明确验证业务结果，而非技术细节
-
-## 十三、常见问题
+## 十四、常见问题
 
 ### 1. 元素定位失败
 
-**原因**：页面加载慢、元素动态变化、定位器不稳定
+可能原因：页面加载慢、浮层遮挡、录制定位器包含图标文本、Ant Design DOM 变化。
 
-**解决方案**：
-- 使用语义化选择器：`get_by_role()`、`get_by_text()`
-- 增加等待时间：`wait_for_selector()`
-- 使用更稳定的属性：`data-testid`、`aria-label`
+建议：
 
-### 2. 测试用例不稳定
+- 用更稳定的文本或 `id` / `aria-label`。
+- 对日期选择器限定 `.ant-picker-dropdown`。
+- 对弹窗限定 `role='dialog'` 或 `.ant-modal`。
+- 运行单个 marker 快速定位问题。
 
-**原因**：网络波动、数据依赖、环境问题
+### 2. 用例被跳过
 
-**解决方案**：
-- 使用智能等待而非固定 `sleep()`
-- 确保测试数据独立且可重复
-- 在 CI/CD 中配置重试机制
+如果 YAML 中 `run: false` 或缺少 `run` 字段，框架收集阶段可能跳过该 case。建议显式写：
 
-### 3. 报告生成失败
-
-**原因**：Allure 未安装、路径问题
-
-**解决方案**：
-- 确保 Allure 已正确安装并配置环境变量
-- 检查报告输出路径是否有写入权限
-
-## 十四、贡献指南
-
-欢迎提交 Issue 和 Pull Request 来改进框架！
-
-### 开发环境设置
-
-```bash
-# 克隆项目
-git clone <repository-url>
-
-# 创建虚拟环境
-python3 -m venv venv
-source venv/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 安装 Playwright
-playwright install
+```yaml
+run: true
 ```
-
-### 代码规范
-
-- 遵循 PEP 8 编码规范
-- 添加必要的注释和文档字符串
-- 编写单元测试确保代码质量
-
-## 十五、许可证
-
-本项目采用 MIT 许可证，详见 [LICENSE](LICENSE) 文件。

@@ -5,14 +5,14 @@
 # @Software: PyCharm
 # @Desc: 钉钉通知封装
 
+import time
 import hmac
 import hashlib
 import base64
 import urllib.parse
-import time
 import urllib.request
-from requests import request
 from loguru import logger
+from requests import request
 
 
 class DingTalkBot:

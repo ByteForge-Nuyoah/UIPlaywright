@@ -3,7 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : login_page.py
 # @Software: PyCharm
-# @Desc    : 登录页 PO
+# @Desc    : 登录页
 
 import allure
 from utils.base_utils.base_page import BasePage
@@ -12,11 +12,6 @@ from utils.base_utils.base_page import BasePage
 class LoginPage(BasePage):
     """
     登录页。
-
-    返回值约定：
-    - 单步动作（input_xxx / submit_xxx）→ return self，便于页内链式
-    - flow 方法（login_on_page_flow）→ 返回登录后期望的下一个 PO（HomePage）
-      失败场景下 HomePage 实例仍可创建，但调用方应该先做 URL 断言再决定是否继续
     """
     # 网页登录
     locator_page_username = "id=user_name"
@@ -52,8 +47,7 @@ class LoginPage(BasePage):
     @allure.step("网页登录：输入用户名：{login}，输入密码：{password}，点击【登录】按钮，提交登录表单")
     def login_on_page_flow(self, login, password):
         """
-        完整登录操作 --> 输入用户名 + 密码 → 提交表单 → 返回首页 PO。
-
+        完整登录操作 --> 输入用户名 + 密码 → 提交表单 → 返回首页。
         设计：
         - 登录成功：调用方可直接链式 `.goto_account_management()` 等
         - 登录失败：URL 仍停留在 /user/login，调用方应在拿到 HomePage 实例后

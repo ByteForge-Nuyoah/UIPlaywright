@@ -3,17 +3,18 @@
 # @Author  : 会飞的🐟
 # @File    : conftest.py
 # @Software: PyCharm
-# @Desc: 这是文件的描述信息
+# @Desc: pytest 配置文件
 
-import time
+
 import os
-from datetime import datetime
-from loguru import logger
+import time
 import pytest
 import allure
+from loguru import logger
+from datetime import datetime
+from config.settings import RunConfig
 from config.path_config import REPORT_DIR
 from config.global_vars import GLOBAL_VARS
-from config.settings import RunConfig
 from utils.data_utils.data_handle import data_handle
 
 # 本地插件注册

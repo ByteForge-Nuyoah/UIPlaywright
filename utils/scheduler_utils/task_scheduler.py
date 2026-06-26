@@ -3,12 +3,12 @@
 # @Author  : 会飞的🐟
 # @File    : task_scheduler.py
 # @Software: PyCharm
-# @Desc: TODO: Description
+# @Desc: 定时任务
 
-import schedule
-import time
-import subprocess
 import sys
+import time
+import schedule
+import subprocess
 from loguru import logger
 from datetime import datetime
 
