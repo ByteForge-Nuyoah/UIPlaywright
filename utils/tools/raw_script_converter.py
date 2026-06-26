@@ -999,7 +999,7 @@ class RawScriptParser:
                     description=f'点击文本框: {name}'
                 )
         
-        # 匹配 page.get_by_role("textbox", name="用户注册的手机 :").fill("18108047253")
+        # 匹配 page.get_by_role("textbox", name="用户注册的手机 :").fill("<TEST_PHONE>")
         elif 'page.get_by_role("textbox"' in line and '.fill(' in line:
             match = re.search(r'page\.get_by_role\("textbox",\s*name="([^"]+)"\)\.fill\("([^"]+)"\)', line)
             if match:
@@ -1226,7 +1226,7 @@ class RawScriptParser:
                     description=f'点击文本框: {name}'
                 )
         
-        # 匹配 page.get_by_role("textbox", name="车主手机 :").fill("18108047253")
+        # 匹配 page.get_by_role("textbox", name="车主手机 :").fill("<TEST_PHONE>")
         elif 'page.get_by_role("textbox"' in line and '.fill(' in line:
             match = re.search(r'page\.get_by_role\("textbox",\s*name="([^"]+)"\)\.fill\("([^"]+)"\)', line)
             if match:
