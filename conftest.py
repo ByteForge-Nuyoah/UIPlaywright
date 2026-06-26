@@ -18,15 +18,13 @@ from config.global_vars import GLOBAL_VARS
 from utils.data_utils.data_handle import data_handle
 
 # 本地插件注册
+# 旧版本曾本地 fork 了 595 行的 pytest-playwright 副本（plugins/pytest_playwright.py），
+# 仅为多挂 3 处 allure.attach 截图/视频。现在直接复用上游 pytest-playwright，
+# 仅保留 ~30 行的 allure_playwright_attach 钩子。
 pytest_plugins = [
-    'plugins.pytest_playwright',
-    'plugins.allure_fixture_filter',  # 过滤 Allure Set up/Tear down 区域的内部噪声 fixture
+    'plugins.allure_playwright_attach',  # 失败用例的截图/视频/trace 自动挂到 Allure
+    'plugins.allure_fixture_filter',     # 过滤 Allure Set up/Tear down 区域的内部噪声 fixture
 ]  # noqa
-"""
-添加本地插件后需要在 pytest.ini 中禁用 pip 安装的 pytest-playwright 插件
-[pytest]
-addopts = -p no:playwright
-"""
 
 
 # ------------------------------------- START: pytest-playwright fixture 覆写---------------------------------------#
