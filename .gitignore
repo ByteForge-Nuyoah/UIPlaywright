@@ -24,6 +24,7 @@ htmlcov/
 
 # Playwright / test artifacts
 .auth/
+*.storageState.json
 outputs/
 playwright/.cache/
 test-results/
