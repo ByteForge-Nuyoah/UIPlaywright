@@ -2,12 +2,7 @@
 # @File    : allure_fixture_filter.py
 # @Desc    : 隐藏 Allure 报告 Set up / Tear down 区域的内部 fixture 噪声，
 #            只保留对业务有意义的 fixture（如 browser / page / storage_state_path / setup_teardown_for_each 等）。
-#
-# 实现方式：对 allure_commons.reporter.AllureReporter 的 start/stop_before_fixture
-# 与 start/stop_after_fixture 打猴补丁，命中黑名单的 fixture 不进 Allure 容器。
 
-# 黑名单：这些 fixture 是 pytest / pytest-base-url / faker / pytest-playwright 内部
-# 流转用，对业务理解无帮助，反而让 Set up 区域显得很乱。
 HIDDEN_FIXTURES = frozenset({
     # pytest 内部
     "pytestconfig", "base_url",
@@ -15,7 +10,7 @@ HIDDEN_FIXTURES = frozenset({
     "_verify_url",
     # faker 的 pytest 插件
     "_session_faker",
-    # pytest-playwright（本地副本 plugins/pytest_playwright.py）的内部 fixture
+    # pytest-playwright（pip 安装的上游插件）的内部 fixture
     "delete_output_dir",
     "_pw_artifacts_folder",
     "_artifacts_recorder",

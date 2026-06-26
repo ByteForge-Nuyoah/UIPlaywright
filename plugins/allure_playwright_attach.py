@@ -2,12 +2,6 @@
 # @Version: Python 3.13
 # @File    : allure_playwright_attach.py
 # @Desc    : 将 pytest-playwright 在测试失败时落盘的截图 / 视频 / trace 自动附到 Allure 报告。
-#
-# 历史：项目原本 fork 了一份 595 行的 `plugins/pytest_playwright.py`，
-# 只是为了在 ArtifactsRecorder 里多调用三处 `allure.attach.file(...)`。
-# 该 fork 维护成本高（要持续合并上游变更）。
-# 本插件用 ~30 行的 pytest 钩子取而代之：上游 pytest-playwright 仍负责落盘，
-# 我们在测试结束后扫描产物目录并把媒体文件挂到 Allure。
 
 from pathlib import Path
 from typing import Optional
