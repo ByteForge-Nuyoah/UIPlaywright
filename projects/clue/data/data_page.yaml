@@ -1,4 +1,5 @@
-data_cases:
+# 场景：数据概览页交互
+data_overview_page:
   - title: "欢迎页页面"
     month_text: "1月"
     range_label: "一年"
