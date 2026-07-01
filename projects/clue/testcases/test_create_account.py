@@ -9,7 +9,7 @@ import os
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-from pages.home_page import HomePage
+from pages.common_page import CommonPage
 from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
 
@@ -26,19 +26,20 @@ class TestCreateAccount:
     def setup_teardown_for_each(self, page: Page):
         """
         page fixture 已通过 projects/clue/testcases/conftest.py 的 storage_state
-        默认携带登录态。这里只需打开首页 → 由 HomePage 派发到 AccountPage，
-        即可在用例里走完整的 PO 链。
+        默认携带登录态。打开首页后，由 CommonPage 经左侧菜单导航到账号管理页。
         """
         logger.info("\n\n---------------Start: 开始测试创建账号-------------")
         page.goto(GLOBAL_VARS["url"])
-        # 入口只持有 HomePage；具体子 PO 由它的导航方法返回
-        self.home_page = HomePage(page)
+        # 持有 CommonPage：左侧菜单等跨页布局与导航的统一入口
+        self.common_page = CommonPage(page)
         yield
 
-    @pytest.mark.parametrize("case", cases["account_cases"], ids=lambda x: x["title"])
+    @pytest.mark.parametrize("case", cases["create_account_page"], ids=lambda x: x["title"])
     def test_create_account_success(self, case):
         """
-        创建新账号：演示从首页 → 账号管理页 → 创建账号 的完整链式 PO 流转。
+        创建新账号：根据用例标题判断期望结果（成功或失败）
+        - 标题包含"成功"：断言账号创建成功
+        - 标题包含"失败"：断言创建失败，提示"已存在"
         """
         phone = case.get("phone")
         name = case.get("name")
@@ -49,15 +50,17 @@ class TestCreateAccount:
             pytest.skip("CLUE_TEST_ACCOUNT_PASSWORD 未配置，跳过创建账号用例")
         title = case.get("title", "")
 
-        # 链式 PO：HomePage → AccountPage → 完整创建流程，全链路一气呵成
+        # 操作步骤：经左侧菜单进入账号管理页 → 输入手机号/姓名/用户名/密码 → 提交创建账号表单
         account_page = (
-            self.home_page
+            self.common_page
             .goto_account_management()
             .create_account_flow(phone=phone, name=name, user_name=user_name, password=password)
         )
 
-        # 断言结果
+        # 断言：按标题分支
         if "成功" in title:
+            # 断言：账号创建成功
             account_page.assert_create_success(user_name=user_name)
         else:
+            # 断言：账号创建失败，提示"已存在"
             account_page.assert_create_failed(keyword="已存在")
