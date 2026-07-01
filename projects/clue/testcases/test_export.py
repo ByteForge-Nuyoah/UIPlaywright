@@ -16,7 +16,6 @@ from pages.export.export_page import ExportPage
 
 
 @pytest.mark.export
-@pytest.mark.recordings
 class TestExportRecord:
     """Export"""
 
@@ -30,6 +29,8 @@ class TestExportRecord:
         self.page_obj = ExportPage(page)
         yield
 
-    @pytest.mark.parametrize("case", cases["export_cases"], ids=lambda x: x["title"])
+    @pytest.mark.parametrize("case", cases["export_record_page"], ids=lambda x: x["title"])
     def test_recorded_flow(self, case):
+        """导出录制文件：按用例数据执行完整导出流程。"""
+        # 操作步骤：打开页面 → 按 page_no 翻页 → 触发导出录制文件流程
         self.page_obj.export_record_flow(case)
