@@ -1,4 +1,5 @@
-account_cases:
+# 场景：创建账号
+create_account_page:
   - title: "创建新账号成功"
     phone: "19900000001"
     name: "自动化测试用户01"
