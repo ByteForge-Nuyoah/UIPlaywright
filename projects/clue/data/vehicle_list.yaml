@@ -1,4 +1,5 @@
-vehicle_list_cases:
+# 场景：车辆列表筛选与导出
+vehicle_filter_export_page:
   - title: 车辆列表-筛选与导出
     run: true
     device_no: "869497052182449"
