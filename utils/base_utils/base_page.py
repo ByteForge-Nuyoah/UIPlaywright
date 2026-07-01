@@ -312,6 +312,20 @@ class BasePage:
             logger.error(f"断言失败 | 当前URL不包含 {url}")
             raise e
 
+    @allure.step("--> 断言 | 验证页面URL等于：{url}")
+    def have_url(self, url: str, timeout: int = 5000) -> None:
+        """
+        断言当前页面URL精确等于指定字符串（含 path）
+        :param url: 期望精确匹配的URL
+        :param timeout: 超时时间(ms)
+        """
+        try:
+            logger.info(f"--> 断言 | 验证页面URL等于：{url}")
+            expect(self.page).to_have_url(url, timeout=timeout)
+        except Exception as e:
+            logger.error(f"断言失败 | 当前URL不等于 {url}")
+            raise e
+
     @allure.step("--> 断言 | 验证页面标题包含：{title}")
     def assert_title_contains(self, title: str, timeout: int = 5000) -> None:
         """
