@@ -10,8 +10,6 @@ from utils.base_utils.base_page import BasePage
 
 
 class VehicleListPage(BasePage):
-    locator_menu_vehicle_management = "text=车辆管理"
-    locator_link_vehicle_list = "text=车辆列表"
     locator_input_device_no = "xpath=//input[@id='corporation_imei']"
     locator_btn_search = "xpath=//button[span[normalize-space()='查 询']]"
     locator_btn_reset = "xpath=//button[span[normalize-space()='重 置']]"
@@ -24,16 +22,6 @@ class VehicleListPage(BasePage):
     locator_dialog_export_sensitive = "xpath=//div[@role='dialog' and .//*[normalize-space()='导出敏感数据']]"
     locator_checkbox_sensitive_confirm = "xpath=//input[@id='agreement']"
     locator_btn_export_sensitive_confirm = "xpath=//div[contains(@class, 'ant-modal') and .//*[normalize-space()='导出敏感数据']]//button[span[normalize-space()='导出敏感数据']]"
-
-    @allure.step("点击【车辆管理】菜单")
-    def click_menu_vehicle_management(self):
-        self.click(self.locator_menu_vehicle_management)
-        return self
-
-    @allure.step("点击【车辆列表】")
-    def click_vehicle_list(self):
-        self.click(self.locator_link_vehicle_list)
-        return self
 
     @allure.step("输入设备号：{device_no}")
     def input_device_no(self, device_no: str):
