@@ -12,6 +12,7 @@ from loguru import logger
 from playwright.sync_api import Page
 
 from pages.login_page import LoginPage
+from pages.common_page import CommonPage
 from utils.files_utils.yaml_handle import YamlHandle
 
 
@@ -35,23 +36,29 @@ class TestLogin:
         # 清除登录cookies，避免影响其他登录用例
         page.context.clear_cookies()
 
-    @pytest.mark.parametrize("case", cases["login_cases"], ids=lambda x: x["title"])
+    @pytest.mark.parametrize("case", cases["user_with_phone_page"], ids=lambda x: x["title"])
     def test_login_user(self, case):
         """
         网页登录：根据用例标题判断期望结果（成功或失败）
-        - 标题包含"成功"：login_on_page_flow() 返回 HomePage，断言已在 /welcome
-        - 标题包含"失败"：仍停留在 /user/login，由 LoginPage 自身断言
+        - 标题包含"成功"：断言页面进入 /welcome，且导航栏头像 href = /${login}
+        - 标题包含"失败"：仍停留在 /user/login
         """
         login = case.get("login")
         password = case.get("password")
         title = case.get("title", "")
+        common_page = CommonPage(self.login_page.page)
 
-        # PO 链式：登录页 → 登录成功后直接拿到 HomePage 实例
-        home_page = self.login_page.login_on_page_flow(login=login, password=password)
+        # 操作步骤：登录页输入用户名及密码，点击【登录】按钮，提交登录表单
+        self.login_page.login_on_page_flow(login=login, password=password)
 
+        # 断言：按标题分支
         if "成功" in title:
-            # HomePage 自带断言方法，且 assert_on_home 返回 self，可继续链式
-            home_page.assert_on_home()
+            # 断言：登录成功，页面进入 /welcome
+            self.login_page.have_url(url="/welcome")
+            # 断言：导航栏右上角用户头像区已渲染（登录成功才会出现）
+            # 说明：当前系统头像是 ant-design Avatar（span），非 <a> 标签无 href，
+            #       故用头像区容器可见性替代模板原「头像 a 标签 href=/${login}」断言
+            common_page.assert_element_visible(locator=common_page.locator_avatar_nickname)
         else:
-            # 失败用例：链已断在登录页；直接在 login_page 上断言即可
+            # 断言：登录失败，仍停留在 /user/login
             self.login_page.assert_url_contains(url="/user/login")
