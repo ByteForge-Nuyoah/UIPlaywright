@@ -10,7 +10,6 @@ from utils.base_utils.base_page import BasePage
 
 
 class AccountPage(BasePage):
-    locator_menu_account_management = "text=账号管理"
     locator_btn_new_account = "xpath=//*[@id='corporation']/div/div[3]/div[3]/button/span"
     locator_btn_account_type = "xpath=//form/div[1]/div/div[2]/div/div/div/button[1]"
     locator_checkbox_role = "xpath=//*[@id='roles']/label/span[1]/input"
@@ -22,11 +21,6 @@ class AccountPage(BasePage):
     locator_radio_allow_export = "xpath=//*[@id='allow_export']/label[2]/span[1]/input"
     locator_radio_allow_export_sensitive = "xpath=//*[@id='allow_export_sensitive']/label[2]"
     locator_btn_confirm = "xpath=/html/body/div[2]/div/div[2]/div/div[1]/div/div[3]/div/div/button[2]"
-
-    @allure.step("点击【账号管理】菜单")
-    def click_menu_account_management(self):
-        self.click(self.locator_menu_account_management)
-        return self
 
     @allure.step("点击【新建账号】按钮")
     def click_btn_new_account(self):
@@ -109,9 +103,9 @@ class AccountPage(BasePage):
     def create_account_flow(self, phone, name, user_name, password):
         """
         完整创建账号流程；仍停留在账号管理页，故返回 self。
+        导航到账号管理页由 CommonPage.goto_account_management 负责，此处只做建账号操作。
         """
         (self
-         .click_menu_account_management()
          .click_btn_new_account()
          .select_account_type()
          .select_role()
