@@ -8,14 +8,13 @@
 import os
 import pytest
 from loguru import logger
-from pages.home_page import HomePage
+from pages.common_page import CommonPage
 from playwright.sync_api import Page
 from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
 
 
 @pytest.mark.vehicle
-@pytest.mark.recordings
 class TestVehicleList:
     """车辆管理/车辆列表"""
 
@@ -26,23 +25,25 @@ class TestVehicleList:
     def setup_teardown_for_each(self, page: Page):
         """
         page fixture 已通过项目级 conftest 注入 storage_state（默认携带登录态）。
-        入口统一通过 HomePage 派发到车辆列表页面。
+        打开首页后，由 CommonPage 经左侧菜单导航到车辆列表页面。
         """
         logger.info("\n\n---------------Start: 车辆列表测试-------------")
         page.goto(GLOBAL_VARS["url"])
-        self.home_page = HomePage(page)
+        # 持有 CommonPage：左侧菜单等跨页布局与导航的统一入口
+        self.common_page = CommonPage(page)
         yield
 
-    @pytest.mark.parametrize("case", cases["vehicle_list_cases"], ids=lambda x: x["title"])
+    @pytest.mark.parametrize("case", cases["vehicle_filter_export_page"], ids=lambda x: x["title"])
     def test_vehicle_list_filter_and_export(self, case):
-        """
-        车辆列表：设备号查询、重置、关联状态筛选、导出脱敏/敏感数据。
-        """
+        """车辆列表：设备号查询、重置、关联状态筛选、导出脱敏/敏感数据。"""
+        # 操作步骤：经左侧菜单进入车辆列表页 → 按设备号筛选 → 导出脱敏数据与敏感数据
         desensitized_download, sensitive_download = (
-            self.home_page
+            self.common_page
             .goto_vehicle_list()
             .vehicle_list_filter_export_flow(device_no=case["device_no"])
         )
 
+        # 断言：脱敏数据导出文件已生成
         assert desensitized_download.suggested_filename
+        # 断言：敏感数据导出文件已生成
         assert sensitive_download.suggested_filename
