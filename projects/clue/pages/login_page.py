@@ -50,7 +50,7 @@ class LoginPage(BasePage):
         """
         完整登录操作 --> 输入用户名 + 密码 → 提交表单 → 返回首页。
         设计：
-        - 登录成功：调用方可直接链式 `.goto_account_management()` 等
+        - 登录成功：返回 HomePage；后续跨页导航用 CommonPage(page).goto_xxx()
         - 登录失败：URL 仍停留在 /user/login，调用方应在拿到 HomePage 实例后
           先做 URL 断言（assert_url_contains("/user/login")）再判断；
           失败用例通常不会再继续链式动作，所以 HomePage 实例可被丢弃。
