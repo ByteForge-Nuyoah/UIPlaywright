@@ -15,7 +15,6 @@ from utils.files_utils.yaml_handle import YamlHandle
 
 
 @pytest.mark.data
-@pytest.mark.recordings
 class TestDataPage:
     """欢迎页/数据概览"""
 
@@ -35,13 +34,12 @@ class TestDataPage:
         self.home_page = HomePage(page)
         yield
 
-    @pytest.mark.parametrize("case", cases["data_cases"], ids=lambda x: x["title"])
+    @pytest.mark.parametrize("case", cases["data_overview_page"], ids=lambda x: x["title"])
     def test_data_interaction(self, case):
-        """
-        欢迎页交互：HomePage → DataPage 链式调用执行完整流程。
-        """
-        # PO 链：HomePage → DataPage → 完整交互流程 → 断言
-        (self.home_page
+        """欢迎页交互：HomePage → DataPage 链式调用执行完整流程后断言仍在 /welcome。"""
+        # 操作步骤：首页 → 数据概览页 → 切换月份/范围/范围/公司 → 执行交互流程
+        (
+            self.home_page
             .goto_data()
             .data_interaction_flow(
                 month_text=case.get("month_text", "1月"),
@@ -50,4 +48,7 @@ class TestDataPage:
                 company_title=case.get("company_title", "钉钉集团"),
                 company_index=int(case.get("company_index", 1)),
             )
-            .assert_url_contains(url="/welcome"))
+        )
+
+        # 断言：交互完成后页面仍在 /welcome
+        self.home_page.assert_url_contains(url="/welcome")
