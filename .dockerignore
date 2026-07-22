@@ -46,4 +46,4 @@ node_modules/
 
 # Files not needed for container runtime
 README.md
-lib/allure-2.42.1/
+lib/allure-*/
