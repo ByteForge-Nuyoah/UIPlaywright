@@ -7,7 +7,9 @@
 
 import os
 import json
+import subprocess
 import allure
+from loguru import logger
 from utils.models import AllureAttachmentType
 from utils.report_utils.platform_handle import PlatformHandle
 from utils.files_utils.files_handle import zip_file, copy_file
@@ -78,7 +80,11 @@ class AllureReportBeautiful:
             print(f"allure results以及allure html报告未生成~ \n"
                   f"allure报告生成依赖java环境，请检查运行环境是否正确安装JDK环境\n"
                   f"allure_results_path={allure_results_path}， allure_html_path={allure_html_path}\n")
-            raise "allure results以及allure html报告未生成~！\nallure报告生成依赖java环境，请检查运行环境是否正确安装JDK环境\nallure_results_path={allure_results_path}， allure_html_path={allure_html_path}\n"
+            raise RuntimeError(
+                f"allure results 以及 allure html 报告未生成！allure 报告生成依赖 java 环境，"
+                f"请检查运行环境是否正确安装 JDK 环境。"
+                f"\nallure_results_path={allure_results_path}， allure_html_path={allure_html_path}"
+            )
 
     # 设置报告窗口的标题
     def set_windows_title(self, new_title):
@@ -145,30 +151,6 @@ class AllureReportBeautiful:
             json.dump(envs, f, ensure_ascii=False, indent=4)
 
 
-def allure_logo_change(allure_path, logo_path):
-    """
-    修改allure的logo
-    步骤：
-    1. 进入‘allure-x.x.x\config’ 目录，打开 ‘allure.yml’ 文件，在最下面增加一行 ‘- custom-logo-plugin ' ， 特别要注意层级关系。
-    2. 复制logo到‘allure-x.x.x\plugins\custom-logo-plugin\static’ 文件夹
-    3. 修改‘allure-x.x.x\plugins\custom-logo-plugin\static\styles.css’  文件 来配置logo，参考如下：
-    .side-nav__brand {
-      background: url('logo.svg') no-repeat left center !important;
-      margin-left: 10px;
-      height: 65px;
-      width: 150px;
-      background-size: contain !important;
-    }
-    .side-nav__brand span{
-        display: none;
-    }
-    @param allure_path:  logo绝对路径
-    @param logo_path:  logo绝对路径
-    """
-    # TODO 后续支持通过代码实现修改
-    pass
-
-
 def generate_allure_report(**kwargs):
     """
     通过allure生成html测试报告，并对报告进行美化
@@ -176,9 +158,18 @@ def generate_allure_report(**kwargs):
     allure_results_dir = kwargs.get("allure_results")
     allure_report_dir = kwargs.get("allure_report")
     # ----------------判断运行的平台，是linux还是windows，执行不同的allure命令----------------
-    cmd = f"{PlatformHandle().allure} generate {allure_results_dir} -o {allure_report_dir} --clean"
-    # 如果html报告没有生成，请检查下是否正确安装jdk(最好默认安装，不要自定义路径)；安装完成后，要注意重启pycharm
-    os.popen(cmd).read()
+    # 用列表参数替代 shell=True 拼接，避免路径含空格/元字符时的注入与截断
+    allure_bin = PlatformHandle().allure
+    result = subprocess.run(
+        [allure_bin, "generate", allure_results_dir, "-o", allure_report_dir, "--clean"],
+        capture_output=True, text=True, timeout=300
+    )
+    if result.returncode != 0:
+        logger.error(f"allure 报告生成失败（returncode={result.returncode}）\n"
+                     f"stdout: {result.stdout}\nstderr: {result.stderr}")
+        raise RuntimeError(
+            f"allure 报告生成失败，returncode={result.returncode}，stderr={result.stderr.strip()}"
+        )
     # ----------------美化allure测试报告 ------------------------------------------
     # 设置打开的 Allure 报告的浏览器窗口标题文案
     allure_beautiful = AllureReportBeautiful(allure_html_path=allure_report_dir, allure_results_path=allure_results_dir)
@@ -196,14 +187,24 @@ def generate_allure_report(**kwargs):
         env_info=kwargs.get("env_info"))
 
     # ----------------压缩allure测试报告，方便后续发送压缩包------------------------------------------
-    # 复制http_server.exe以及双击打开Allure报告.bat，以便windows环境下，直接打开查看allure html报告
+    # 复制 http_server.exe 与「双击打开Allure报告.bat」到报告目录，便于 Windows 下直接双击查看。
+    # 该步骤为 Windows 便捷打开方式，非报告生成的必要环节：
+    # 当 allure_config_path 不存在、或目录下无对应文件（如 macOS/Linux/CI 环境）时，跳过且不报错。
     allure_config_path = kwargs.get("allure_config_path")  # 保存http_server.exe及双击打开Allure报告.bat的目录
-    copy_file(src_file_path=os.path.join(allure_config_path,
-                                         [i for i in os.listdir(allure_config_path) if i.endswith(".exe")][0]),
-              dest_dir_path=allure_report_dir)
-    copy_file(src_file_path=os.path.join(allure_config_path,
-                                         [i for i in os.listdir(allure_config_path) if i.endswith(".bat")][0]),
-              dest_dir_path=allure_report_dir)
+    if allure_config_path and os.path.isdir(allure_config_path):
+        def _first_file(suffix):
+            matches = [f for f in os.listdir(allure_config_path) if f.lower().endswith(suffix)]
+            return matches[0] if matches else None
+
+        for suffix in (".exe", ".bat"):
+            fname = _first_file(suffix)
+            if fname:
+                copy_file(src_file_path=os.path.join(allure_config_path, fname),
+                          dest_dir_path=allure_report_dir)
+            else:
+                logger.debug(f"allure_config 目录下未找到 {suffix} 文件，跳过复制（非 Windows 环境可忽略）")
+    else:
+        logger.debug(f"allure_config_path 不存在或非目录，跳过 Windows 便捷打开文件复制：{allure_config_path}")
 
     attachment_path = kwargs.get("attachment_path")  # allure报告压缩的路径，例如：report/allure_report.zip
     zip_file(in_path=allure_report_dir, out_path=attachment_path)
