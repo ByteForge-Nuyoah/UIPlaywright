@@ -12,13 +12,13 @@ from utils.base_utils.base_page import BasePage
 class ExportPage(BasePage):
     locator_link_export_record = 'text=导出记录'
     locator_button_search = "xpath=//button[span[normalize-space()='查 询'] or normalize-space()='查 询']"
-    locator_textbox_element_19fcb9eb = "xpath=//label[contains(normalize-space(), '时间')]//following::input[1]"
+    locator_input_time = "xpath=//label[contains(normalize-space(), '时间')]//following::input[1]"
     locator_button_previous_month = "xpath=//button[@aria-label='上个月 (翻页上键)' and not(contains(@style, 'visibility: hidden'))]"
-    locator_text_1_1 = "xpath=(//div[contains(@class, 'ant-picker-dropdown') and not(contains(@style, 'display: none'))]//div[normalize-space()='1'])[1]"
-    locator_text_4_3 = "xpath=(//div[contains(@class, 'ant-picker-dropdown') and not(contains(@style, 'display: none'))]//div[normalize-space()='4'])[2]"
+    locator_date_1 = "xpath=(//div[contains(@class, 'ant-picker-dropdown') and not(contains(@style, 'display: none'))]//div[normalize-space()='1'])[1]"
+    locator_date_4 = "xpath=(//div[contains(@class, 'ant-picker-dropdown') and not(contains(@style, 'display: none'))]//div[normalize-space()='4'])[2]"
     locator_button_reset = "xpath=//button[span[normalize-space()='重 置'] or normalize-space()='重 置']"
-    locator_checkbox_element_1dd0c974 = "xpath=//label[contains(normalize-space(), '敏感下载')]//input[@type='checkbox']"
-    locator_checkbox_element_acd2c2dc = "xpath=//label[contains(normalize-space(), '脱敏下载')]//input[@type='checkbox']"
+    locator_checkbox_sensitive_download = "xpath=//label[contains(normalize-space(), '敏感下载')]//input[@type='checkbox']"
+    locator_checkbox_desensitized_download = "xpath=//label[contains(normalize-space(), '脱敏下载')]//input[@type='checkbox']"
     locator_textbox_page_no = "xpath=//input[@aria-label='页']"
 
     @allure.step("点击【导出记录】")
@@ -31,9 +31,9 @@ class ExportPage(BasePage):
         self.click(self.locator_button_search)
         return self
 
-    @allure.step("点击【时间】")
-    def click_element_19fcb9eb(self):
-        self.click(self.locator_textbox_element_19fcb9eb)
+    @allure.step("点击【时间】输入框")
+    def click_time_input(self):
+        self.click(self.locator_input_time)
         return self
 
     @allure.step("点击【上个月 (翻页上键)】")
@@ -41,14 +41,14 @@ class ExportPage(BasePage):
         self.click(self.locator_button_previous_month)
         return self
 
-    @allure.step("点击【1】")
-    def click_1(self):
-        self.click(self.locator_text_1_1)
+    @allure.step("点击日期【1】")
+    def click_date_1(self):
+        self.click(self.locator_date_1)
         return self
 
-    @allure.step("点击【4】")
-    def click_4(self):
-        self.click(self.locator_text_4_3)
+    @allure.step("点击日期【4】")
+    def click_date_4(self):
+        self.click(self.locator_date_4)
         return self
 
     @allure.step("点击【重 置】")
@@ -57,13 +57,13 @@ class ExportPage(BasePage):
         return self
 
     @allure.step("选择【敏感下载】")
-    def select_element_1dd0c974(self):
-        self.click(self.locator_checkbox_element_1dd0c974)
+    def select_sensitive_download(self):
+        self.click(self.locator_checkbox_sensitive_download)
         return self
 
     @allure.step("选择【脱敏下载】")
-    def select_element_acd2c2dc(self):
-        self.click(self.locator_checkbox_element_acd2c2dc)
+    def select_desensitized_download(self):
+        self.click(self.locator_checkbox_desensitized_download)
         return self
 
     @allure.step("输入页：{value}")
@@ -76,7 +76,7 @@ class ExportPage(BasePage):
         self.press(self.locator_textbox_page_no, key)
         return self
 
-    @allure.step("ExportRecordPage完整流程")
+    @allure.step("导出记录页完整流程")
     def export_record_flow(self, case):
         """
         由 Playwright 录制片段转换生成的完整流程。
@@ -84,14 +84,14 @@ class ExportPage(BasePage):
         (self
          .click_export_record()
          .click_search()
-         .click_element_19fcb9eb()
+         .click_time_input()
          .click_previous_month()
-         .click_1()
-         .click_4()
+         .click_date_1()
+         .click_date_4()
          .click_search()
          .click_reset()
-         .select_element_1dd0c974()
-         .select_element_acd2c2dc()
+         .select_sensitive_download()
+         .select_desensitized_download()
          .input_page_no(case.get("page_no", '5'))
          .press_page_no(case.get("page_no_key", 'Enter'))
          )

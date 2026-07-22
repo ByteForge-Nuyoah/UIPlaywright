@@ -6,6 +6,7 @@
 # @Desc    : 账号管理页
 
 import allure
+from loguru import logger
 from utils.base_utils.base_page import BasePage
 
 
@@ -20,7 +21,8 @@ class AccountPage(BasePage):
     locator_radio_status = "xpath=//*[@id='status']/label[1]/span[1]/input"
     locator_radio_allow_export = "xpath=//*[@id='allow_export']/label[2]/span[1]/input"
     locator_radio_allow_export_sensitive = "xpath=//*[@id='allow_export_sensitive']/label[2]"
-    locator_btn_confirm = "xpath=/html/body/div[2]/div/div[2]/div/div[1]/div/div[3]/div/div/button[2]"
+    # ant-design Modal 确定按钮（基于 ant-modal 模式，若弹窗非标准结构需 DOM 调整）
+    locator_btn_confirm = "xpath=//div[contains(@class,'ant-modal')]//div[contains(@class,'ant-modal-footer')]//button[contains(@class,'ant-btn-primary')]"
 
     @allure.step("点击【新建账号】按钮")
     def click_btn_new_account(self):
@@ -73,9 +75,9 @@ class AccountPage(BasePage):
     def select_allow_export_sensitive(self):
         try:
             # 短超时尝试点击；若导出关闭则该字段隐藏，跳过即可
-            self.page.click(self.locator_radio_allow_export_sensitive, timeout=3000)
+            self.click(self.locator_radio_allow_export_sensitive, timeout=3000)
         except Exception as e:
-            print(f"Skipping allow_export_sensitive selection: {e}")
+            logger.warning(f"跳过导出敏感信息选择（字段可能隐藏）：{e}")
         return self
 
     @allure.step("点击【确定】按钮")

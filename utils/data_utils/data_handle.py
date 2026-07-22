@@ -5,6 +5,8 @@
 # @Software: PyCharm
 # @Desc: 数据处理类
 
+import ast
+import builtins
 import os
 import json
 import copy
@@ -13,7 +15,7 @@ import random  # 导包不能移除，否则random.choice这种就不能处理�
 import re, uuid
 from loguru import logger
 from string import Template
-from config.path_config import FILES_DIR
+from config.settings import FILES_DIR
 from datetime import datetime, timedelta
 from requests.cookies import RequestsCookieJar
 from requests.utils import dict_from_cookiejar
@@ -21,6 +23,16 @@ from utils.tools.aes_encrypt_decrypt import Encrypt
 from utils.data_utils.faker_handle import FakerData
 from utils.data_utils.eval_data_handle import eval_data
 from utils.files_utils.files_handle import file_to_base64, filepath_to_base64, get_files
+
+
+# 受限 eval 命名空间：仅暴露安全的内建函数，移除 __import__/eval/exec/open 等，防止 RCE
+_SAFE_BUILTIN_NAMES = {
+    "int", "str", "float", "bool", "bytes", "list", "dict", "tuple", "set", "frozenset",
+    "len", "range", "sorted", "reversed", "min", "max", "sum", "abs", "round", "pow",
+    "enumerate", "zip", "map", "filter", "any", "all", "format", "repr", "chr", "ord",
+    "hex", "oct", "bin", "True", "False", "None",
+}
+SAFE_BUILTINS = {k: getattr(builtins, k) for k in _SAFE_BUILTIN_NAMES}
 
 
 class DataHandle:
@@ -112,7 +124,7 @@ class DataHandle:
                 obj = eval_data(obj)
 
             if not isinstance(obj, str):
-                return self.data_handle(obj)
+                return self.data_handle(obj, source)
 
             # 再找一遍剩余的${}跟第一步的结果合并，提取漏掉的诸如1+1的表达式(在此认为关键字无法替换的都是表达式，最后表达式也无法处理的情况就报错或者原样返回)
             pattern = r'\$\{([^}]+)\}'  # 定义匹配以"${"开头，"}"结尾的字符串的正则表达式
@@ -121,7 +133,7 @@ class DataHandle:
             # 进行函数调用替换
             obj = self.invoke_funcs(obj, func)
             if not isinstance(obj, str):
-                return self.data_handle(obj)
+                return self.data_handle(obj, source)
             # 直接返回最后的结果
             return obj
         elif isinstance(obj, list):
@@ -138,32 +150,40 @@ class DataHandle:
     def invoke_funcs(self, obj, funcs):
         """
         调用方法，并将方法返回的结果替换到obj中去
+
+        安全说明：函数调用通过受限命名空间 eval 执行（SAFE_BUILTINS），移除了 __import__/eval/exec/open
+        等危险内建，挡住常见 RCE 入口。如需新增可调用函数，加入 base_ns 即可。
         """
         for key, funcs in funcs.items():  # 遍历方法字典调用并替换
             func = funcs[1]
-            # logger.debug("invoke func : ", func)
             try:
+                # 受限命名空间：仅含安全 builtins + 可能用到的模块/函数
+                base_ns = {"__builtins__": SAFE_BUILTINS, "random": random,
+                           "aes_encrypt_data": aes_encrypt_data}
                 if "." in func:
                     if func.startswith("faker."):
                         # 英文的faker数据：self.faker = Faker()
                         faker = self.FakerDataClass.faker
-                        obj = self.deal_func_res(obj, key, eval(func))
+                        ns = {**base_ns, "faker": faker}
+                        obj = self.deal_func_res(obj, key, eval(func, ns))
                     elif func.startswith("fk_zh."):
                         # 中文的faker数据： self.fk_zh = Faker(locale='zh_CN')
                         fk_zh = self.FakerDataClass.fk_zh
-                        obj = self.deal_func_res(obj, key, eval(func))
+                        ns = {**base_ns, "fk_zh": fk_zh}
+                        obj = self.deal_func_res(obj, key, eval(func, ns))
                     else:
-                        obj = self.deal_func_res(obj, key, eval(func))
+                        obj = self.deal_func_res(obj, key, eval(func, base_ns))
                 else:
                     func_parts = func.split('(')
                     func_name = func_parts[0]
                     func_args_str = ''.join(func_parts[1:])[:-1]
                     if func_name in self.method_list:  # 证明是FakerData类方法
                         method = getattr(self.FakerDataClass, func_name)
-                        res = eval(f"method({func_args_str})")  # 尝试直接调用
+                        ns = {**base_ns, "method": method}
+                        res = eval(f"method({func_args_str})", ns)  # 尝试直接调用
                         obj = self.deal_func_res(obj, key, res)
                     else:  # 不是FakerData类方法，但有可能是 1+1 这样的
-                        obj = self.deal_func_res(obj, key, eval(func))
+                        obj = self.deal_func_res(obj, key, eval(func, base_ns))
             except:
                 logger.warning("Warn: --------函数：%s 无法调用成功, 请检查是否存在该函数-------" % func)
                 obj = obj.replace(key, funcs[0])
@@ -174,7 +194,7 @@ class DataHandle:
         obj = obj.replace(key, str(res))
         try:
             if not isinstance(res, str):
-                obj = eval(obj)
+                obj = ast.literal_eval(obj)
         except:
             msg = (f"\nobj --> {obj}\n"
                    f"函数返回值 --> {res}\n"

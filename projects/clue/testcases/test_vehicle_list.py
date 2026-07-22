@@ -43,7 +43,9 @@ class TestVehicleList:
             .vehicle_list_filter_export_flow(device_no=case["device_no"])
         )
 
-        # 断言：脱敏数据导出文件已生成
-        assert desensitized_download.suggested_filename
-        # 断言：敏感数据导出文件已生成
-        assert sensitive_download.suggested_filename
+        # 断言：导出文件已生成且落盘（文件名非空 + 文件存在 + 大小 > 0）
+        for download, desc in ((desensitized_download, "脱敏"), (sensitive_download, "敏感")):
+            assert download.suggested_filename, f"{desc}数据导出文件名不应为空"
+            path = download.path()
+            assert path and os.path.exists(path) and os.path.getsize(path) > 0, \
+                f"{desc}数据导出文件未落盘或为空: {path}"

@@ -10,12 +10,10 @@ import hmac
 import hashlib
 import base64
 import urllib.parse
-import urllib.request
-from loguru import logger
-from requests import request
+from utils.notify_utils.base_bot import BaseNotifyBot
 
 
-class DingTalkBot:
+class DingTalkBot(BaseNotifyBot):
     """
     钉钉机器人
     """
@@ -29,14 +27,8 @@ class DingTalkBot:
         if secret:
             timestamp = str(round(time.time() * 1000))
             sign = self.get_sign(secret, timestamp)
-            self.webhook_url = webhook_url + f'&timestamp={timestamp}&sign={sign}'  # 最终url，url+时间戳+签名
-        else:
-            self.webhook_url = webhook_url
-
-        self.headers = {
-            "Content-Type": "application/json",
-            "Charset": "UTF-8"
-        }
+            webhook_url = webhook_url + f'&timestamp={timestamp}&sign={sign}'  # 最终url，url+时间戳+签名
+        super().__init__(webhook_url=webhook_url)
 
     def get_sign(self, secret, timestamp):
         """
@@ -52,34 +44,6 @@ class DingTalkBot:
 
         sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
         return sign
-
-    def send_message(self, payload):
-        """
-        发送钉钉消息
-        :payload: 请求json数据
-        """
-        logger.debug("\n======================================================\n" \
-                     "-------------Start：发送钉钉消息--------------------\n"
-                     f"Webhook_Url: {self.webhook_url}\n" \
-                     f"内容: {payload}\n" \
-                     "=====================================================")
-        response = request(
-            url=self.webhook_url,
-            json=payload,
-            headers=self.headers,
-            method="POST"
-        )
-        if response.json().get("errcode") == 0:
-            logger.debug("\n======================================================\n" \
-                         "-------------End：发送钉钉消息--------------------\n"
-                         f"通过钉钉机器人发送{payload.get('msgtype', '')}消息成功：{response.json()}\n" \
-                         "=====================================================")
-            print(f"通过钉钉机器人发送{payload.get('msgtype', '')}消息成功：{response.json()}")
-            return True
-        else:
-            logger.error(f"通过钉钉机器人发送{payload.get('msgtype', '')}消息失败：{response.text}")
-            print(f"通过钉钉机器人发送{payload.get('msgtype', '')}消息失败：{response.text}")
-            return False
 
     def send_text(self, content, mobiles=None, is_at_all=False):
         """

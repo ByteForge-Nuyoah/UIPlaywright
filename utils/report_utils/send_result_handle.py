@@ -11,7 +11,7 @@ from utils.data_utils.data_handle import data_handle
 from utils.notify_utils.wechat_bot import WechatBot
 from utils.notify_utils.dingding_bot import DingTalkBot
 from utils.notify_utils.yagmail_bot import YagEmailServe
-from utils.report_utils.get_results_handle import get_test_results_from_from_allure_report
+from utils.report_utils.get_results_handle import get_test_results_from_allure_report
 from config.settings import SEND_RESULT_TYPE, email, ding_talk, wechat, email_subject, email_content, ding_talk_title, \
     ding_talk_content, wechat_content
 
@@ -88,7 +88,7 @@ def send_result(report_info: dict, report_path: str, attachment_path: str = None
         return
 
     # 从 Allure 报告中提取统计信息 (passed, failed, duration 等)
-    results = get_test_results_from_from_allure_report(report_path)
+    results = get_test_results_from_allure_report(report_path)
     # 合并传入的 report_info
     for k, v in report_info.items():
         results[k] = v

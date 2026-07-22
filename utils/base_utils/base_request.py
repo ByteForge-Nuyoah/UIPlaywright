@@ -40,11 +40,14 @@ class BaseRequest:
         :return: 响应对象
         """
         try:
-
+            request_type = req_data.get("request_type")
+            method = req_data.get("method")
+            if not request_type or not method:
+                raise ValueError(f"接口数据缺少 request_type 或 method 字段：{req_data}")
             return self.send_api(
-                request_type=req_data.get("request_type").lower(),
+                request_type=request_type.lower(),
                 url=req_data.get("url"),
-                method=req_data.get("method").lower(),
+                method=method.lower(),
                 headers=req_data.get("headers", None),
                 payload=req_data.get("payload", None))
         except Exception as e:
@@ -92,7 +95,7 @@ class BaseRequest:
         elif request_type == "params":
             return self.api.fetch(url_or_request=url, method=method, headers=headers, params=payload)
         else:
-            logger.error("不支持的请求类型: {request_type}, request_type可选关键字为params, json, form, multipart")
+            logger.error(f"不支持的请求类型: {request_type}, request_type可选关键字为params, json, form, multipart")
             raise ValueError(
                 f"不支持的请求类型: {request_type}, request_type可选关键字为params, json, form, multipart")
 

@@ -22,8 +22,7 @@ uiPlaywright/
 │   ├── env/
 │   │   ├── .env.example          # 环境变量模板
 │   │   └── .env                  # 本地敏感配置，需手动创建，不提交
-│   ├── path_config.py            # 路径配置
-│   ├── settings.py               # 运行配置 RunConfig
+│   ├── settings.py               # 路径 + 运行配置 RunConfig + 通知配置（框架配置唯一入口）
 │   └── global_vars.py            # 运行期全局变量
 ├── projects/
 │   └── clue/
@@ -121,6 +120,8 @@ cp config/env/.env.example config/env/.env
 | `-m` | pytest marker 筛选 | 无 | `login`, `account`, `data`, `vehicle`, `export_record`, `api`, `recordings` |
 | `-path` | 指定测试文件或目录 | 无 | 任意 pytest 路径 |
 | `-video` | 视频录制 | `off` | `on`, `off`, `retain-on-failure` |
+| `-screenshot` | 截图策略 | `on` | `on`, `off`, `only-on-failure` |
+| `-tracing` | trace 策略 | `retain-on-failure` | `on`, `off`, `retain-on-failure` |
 
 ### 常用命令
 
@@ -362,8 +363,8 @@ ENV_VARS = {
         "sms_state": "LOGIN",
     },
     "prod": {
-        "url": "https://clue-dev.spreadwin.cn",
-        "host": "https://clueapi-dev.spreadwin.cn",
+        "url": "https://clue.spreadwin.cn",
+        "host": "https://clueapi.spreadwin.cn",
         "admin_user_name": os.getenv("CLUE_ADMIN_USER", ""),
         "admin_user_password": os.getenv("CLUE_ADMIN_PASSWORD", ""),
     },
@@ -395,4 +396,23 @@ payload:
 
 ```bash
 python run.py -project clue -env test -mode headless -browser chromium -report no -m <marker>
+```
+
+## 十三、定位器规范
+
+Page Object 中的元素定位器按以下优先级选择，保证稳定与可维护：
+
+1. `get_by_role` / `get_by_label`（语义化，最稳定，优先使用）
+2. `data-testid`（团队可控的测试标识）
+3. `id=`（稳定，需前端配合）
+4. `text=`（文本定位，适合按钮/链接）
+5. `xpath=`（最后手段，**禁止使用绝对路径**如 `/html/body/...`，DOM 层级变化即失效）
+
+示例：
+
+```python
+# 推荐：语义化或稳定结构定位
+locator_btn_confirm = "xpath=//div[contains(@class,'ant-modal-footer')]//button[contains(@class,'ant-btn-primary')]"
+# 禁止：绝对路径，DOM 层级微调即失效
+locator_btn_confirm = "xpath=/html/body/div[2]/div/div[2]/div/div[1]/div/div[3]/div/div/button[2]"
 ```

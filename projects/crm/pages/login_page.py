@@ -3,7 +3,7 @@
 # @Author  : 会飞的🐟
 # @File    : login_page.py
 # @Software: PyCharm
-# @Desc    : 登录页
+# @Desc    : CRM 登录页
 
 import allure
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
@@ -12,19 +12,20 @@ from utils.base_utils.base_page import BasePage
 
 class LoginPage(BasePage):
     """
-    登录页。
+    CRM 登录页。
     """
-    # 网页登录
-    locator_page_username = "id=user_name"
-    locator_page_password = "id=password"
-    locator_page_login_btn = "xpath=//*[@id='root']/div/div/form/button"
+    # TODO: 打开 https://workspace-dev.spreadwin.cn 登录页，用开发者工具确认以下定位器
+    locator_page_username = "id=username"                       # TODO: 用户名输入框定位器
+    locator_page_password = "id=password"                       # TODO: 密码输入框定位器
+    locator_page_login_btn = "xpath=//button[@type='submit']"   # TODO: 登录按钮定位器
 
-    @allure.step("访问登录页面：/user/login")
-    def navigate(self, timeout: int = 30000):
+    @allure.step("访问 CRM 登录页面")
+    def navigate(self, timeout: int = 30):
         """
         访问登录页面
+        # TODO: 确认登录页路径，可能是 /login 或根路径重定向到登录页
         """
-        self.visit("/user/login", timeout=timeout)
+        self.visit("/login", timeout=timeout)
         return self
 
     @allure.step("网页登录：输入用户名：{login}")
@@ -46,27 +47,18 @@ class LoginPage(BasePage):
     @allure.step("网页登录：输入用户名：{login}，输入密码：{password}，点击【登录】按钮，提交登录表单")
     def login_on_page_flow(self, login, password):
         """
-        完整登录操作 --> 输入用户名 + 密码 → 提交表单 → 返回首页。
-        设计：
-        - 登录成功：返回 HomePage；后续跨页导航用 CommonPage(page).goto_xxx()
-        - 登录失败：URL 仍停留在 /user/login，调用方应在拿到 HomePage 实例后
-          先做 URL 断言（assert_url_contains("/user/login")）再判断；
-          失败用例通常不会再继续链式动作，所以 HomePage 实例可被丢弃。
+        完整登录操作 --> 输入用户名 + 密码 -> 提交表单。
+        成功则 URL 离开登录页；失败仍停留。
 
-        :return: HomePage 实例
+        :return: self（CRM 暂未建 home_page，调用方直接用 self.page 继续操作）
         """
-        # 局部导入，避免与 home_page 循环依赖
-        from pages.home_page import HomePage
-
         (self
          .input_username_on_page(login)
          .input_password_on_page(password)
          .submit_login_on_page())
-        # 提交后：成功跳走 /user/login，失败仍停留。
-        # 使用 Playwright 自动等待替代 wait_for_timeout：URL 离开登录页即返回；若
-        # 仍停留（失败路径）超时即可，调用方会再用 assert_url_contains 做最终断言。
+        # TODO: 登录成功后按实际首页 URL 调整断言（这里先等离开 /login）
         try:
-            self.page.wait_for_url(lambda url: "/user/login" not in url, timeout=5000)
+            self.page.wait_for_url(lambda url: "/login" not in url, timeout=5000)
         except PlaywrightTimeoutError:
             pass
-        return HomePage(self.page)
+        return self

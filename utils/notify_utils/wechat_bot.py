@@ -11,8 +11,9 @@ import base64
 import hashlib
 from loguru import logger
 from requests import request
+from utils.notify_utils.base_bot import BaseNotifyBot
 
-class WechatBot:
+class WechatBot(BaseNotifyBot):
     """
     企业微信机器人
     当前自定义机器人支持文本（text）、markdown（markdown）、图片（image）、图文（news）, 文件（file）五种消息类型。
@@ -23,39 +24,7 @@ class WechatBot:
         """
         :param webhook_url: 机器人的WebHook_url
         """
-        self.webhook_url = webhook_url
-        self.headers = {
-            "Content-Type": "application/json",
-            "Charset": "UTF-8"
-        }
-
-    def send_message(self, payload):
-        """
-        发送微信消息
-        :payload: 请求json数据
-        """
-        logger.debug("\n======================================================\n" \
-                     "-------------Start：发送企业微信消息--------------------\n"
-                     f"Webhook_Url: {self.webhook_url}\n" \
-                     f"内容: {payload}\n" \
-                     "=====================================================")
-        response = request(
-            url=self.webhook_url,
-            json=payload,
-            headers=self.headers,
-            method="POST"
-        )
-        if response.json().get("errcode") == 0:
-            logger.debug("\n======================================================\n" \
-                         "-------------End：发送企业微信消息--------------------\n"
-                         f"通过企业微信发送{payload.get('msgtype', '')}消息成功：{response.json()}\n" \
-                         "=====================================================")
-            print(f"通过企业微信发送{payload.get('msgtype', '')}消息成功：{response.json()}")
-            return True
-        else:
-            logger.error(f"通过企业微信发送{payload.get('msgtype', '')}消息失败：{response.text}")
-            print(f"通过企业微信发送{payload.get('msgtype', '')}消息失败：{response.text}")
-            return False
+        super().__init__(webhook_url=webhook_url)
 
     def send_text(self, content, mentioned_list=None, mentioned_mobile_list=None):
         """
@@ -145,16 +114,21 @@ class WechatBot:
         """
         token_regex = r"key=([\w-]+)"
         match = re.search(token_regex, self.webhook_url)
+        if not match:
+            raise ValueError(f"webhook_url 中未匹配到 key 参数：{self.webhook_url}")
         token = match.group(1)
         url = f"https://qyapi.weixin.qq.com/cgi-bin/webhook/upload_media?key={token}&type=file"
-        headers = {
-            "Content-Type": "multipart/form-data;"
-        }
         with open(file_path, "rb") as f:
             files = {"media": (os.path.basename(file_path), f.read())}
-        response = request(url=url, method="POST", files=files, headers=headers)
-        if response.json().get("errcode") == 0:
-            media_id = response.json().get("media_id")
+        try:
+            # 不手动设 Content-Type：requests 用 files= 时会自动生成带 boundary 的 multipart 头
+            response = request(url=url, method="POST", files=files, timeout=10)
+            resp_json = response.json()
+        except Exception as e:
+            logger.error(f"企业微信上传文件异常或响应非JSON：{e}")
+            return False
+        if resp_json.get("errcode") == 0:
+            media_id = resp_json.get("media_id")
             print(f"上传文件成功，media_id= {media_id}")
             return media_id
         else:

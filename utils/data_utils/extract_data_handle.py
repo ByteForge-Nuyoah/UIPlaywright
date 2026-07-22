@@ -65,8 +65,20 @@ def response_extract(response: APIResponse, expr: str = '.'):
     :return result: 提取的结果，未提取到返回 None
     """
     try:
-        result = eval(expr)
-        logger.debug(f"\n提取表达式： {expr}\n"
+        # 用 getattr 链式访问替代 eval，避免任意代码执行
+        # 支持 "response.attr" / "response.attr()" / "response.a.b"；不支持索引表达式（如 headers["k"]）
+        expr = expr.strip()
+        call = expr.endswith("()")
+        if call:
+            expr = expr[:-2]
+        parts = expr.split(".")
+        result = response
+        for p in parts[1:]:  # 跳过首段 "response"
+            if p:
+                result = getattr(result, p)
+        if call:
+            result = result()
+        logger.debug(f"\n提取表达式： {expr}{'()' if call else ''}\n"
                      f"提取值类型： {type(result)}\n"
                      f"提取值：{result}\n")
         return result
@@ -74,6 +86,42 @@ def response_extract(response: APIResponse, expr: str = '.'):
         logger.debug(f"\n提取表达式： {expr}\n"
                      f"提取对象： {response}\n"
                      f"错误信息：{e}\n")
+
+
+def extract_by_type(type_key, pairs, *, json_source=None, text_source=None, response=None):
+    """
+    按单个提取类型 type_key，对 pairs={提取名: 表达式} 执行提取，返回 {提取名: 提取值}。
+
+    统一 type_jsonpath / type_re / type_response 三种提取方式的分发逻辑，
+    供 request_control.after_request 等调用方复用，消除各数据来源分支内重复的 type 判断。
+
+    :param type_key: 提取类型，type_jsonpath / type_re / type_response（大小写不敏感）
+    :param pairs: {提取名: 表达式} 字典
+    :param json_source: type_jsonpath 的数据源（dict/list）
+    :param text_source: type_re 的数据源（str）
+    :param response: type_response 所需的 APIResponse 对象
+    :return: {提取名: 提取值}；类型未知或缺少必要数据源时对应项不写入并记录日志
+    """
+    results = {}
+    if not isinstance(pairs, dict):
+        logger.error(f"提取配置 {type_key} 的值不是字典格式：{pairs}")
+        return results
+    tk = type_key.lower()
+    if tk == "type_jsonpath":
+        for name, expr in pairs.items():
+            results[name] = json_extractor(json_source, expr)
+    elif tk == "type_re":
+        for name, expr in pairs.items():
+            results[name] = re_extract(text_source, expr)
+    elif tk == "type_response":
+        if response is None:
+            logger.error("type_response 提取需要 response 对象，但未传入")
+            return results
+        for name, expr in pairs.items():
+            results[name] = response_extract(response, expr)
+    else:
+        logger.error(f"提取方式：{type_key} 错误，仅支持 type_jsonpath、type_re、type_response")
+    return results
 
 
 if __name__ == '__main__':

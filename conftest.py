@@ -5,22 +5,17 @@
 # @Software: PyCharm
 # @Desc: pytest 配置文件
 
-
 import os
 import time
 import pytest
 import allure
 from loguru import logger
 from datetime import datetime
-from config.settings import RunConfig
-from config.path_config import REPORT_DIR
 from config.global_vars import GLOBAL_VARS
 from utils.data_utils.data_handle import data_handle
+from config.settings import resolve_window_size, REPORT_DIR
 
 # 本地插件注册
-# 旧版本曾本地 fork 了 595 行的 pytest-playwright 副本（plugins/pytest_playwright.py），
-# 仅为多挂 3 处 allure.attach 截图/视频。现在直接复用上游 pytest-playwright，
-# 仅保留 ~30 行的 allure_playwright_attach 钩子。
 pytest_plugins = [
     'plugins.allure_playwright_attach',  # 失败用例的截图/视频/trace 自动挂到 Allure
     'plugins.allure_fixture_filter',     # 过滤 Allure Set up/Tear down 区域的内部噪声 fixture
@@ -38,7 +33,7 @@ def browser_context_args(browser_context_args):
     1. headed 模式下使用大视口，避免浏览器最大化但页面仍按默认小视口渲染
     2. headless/CI 模式下使用固定分辨率，保证结果稳定
     """
-    window_size = GLOBAL_VARS.get("window_size") or RunConfig.window_size or {"width": 1920, "height": 1080}
+    window_size = resolve_window_size()
 
     return {
         **browser_context_args,
@@ -55,7 +50,7 @@ def browser_type_launch_args(browser_type_launch_args):
     作用域：session
     功能：配置浏览器启动参数，如是否最大化窗口、是否开启开发者工具等
     """
-    window_size = GLOBAL_VARS.get("window_size") or RunConfig.window_size or {"width": 1920, "height": 1080}
+    window_size = resolve_window_size()
     args = list(browser_type_launch_args.get("args", []))
     args.extend([
         "--start-maximized",
@@ -75,8 +70,13 @@ def browser_type_launch_args(browser_type_launch_args):
 def pytest_configure(config):
     """
     pytest 钩子函数：初始化配置
-    功能：在测试运行前，将全局变量中的 URL 设置为 pytest 的 base_url
+    功能：
+    1. 加载 .env（直跑 pytest 不经 run.py 时也能读到环境变量）
+    2. 将全局变量中的 URL 设置为 pytest 的 base_url
     """
+    from dotenv import load_dotenv
+    _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', '.env')
+    load_dotenv(_env_path)
     config.option.base_url = GLOBAL_VARS.get("url")
 
 
@@ -161,7 +161,10 @@ def pytest_terminal_summary(terminalreporter, config):
                 f"- 异常用例个数（error）: {_ERROR} 个\n" \
                 f"- 重跑的用例数(--reruns的值): {_RERUN} ({reruns_value}) 个\n"
     try:
-        _RATE = (_PASSED + _XPASSED) / (_PASSED + _FAILED + _XPASSED + _XFAILED) * 100
+        # 成功率 = 成功数 / 实际执行数（passed/failed/error/xpassed/xfailed，排除 skipped），
+        # 与 get_results_handle 的口径保持一致，不再把 skipped 计入成功。
+        _executed = _PASSED + _FAILED + _ERROR + _XPASSED + _XFAILED
+        _RATE = (_PASSED + _XPASSED) / _executed * 100 if _executed > 0 else 0.0
         test_result = f"- 用例成功率: {_RATE:.2f} %\n"
         logger.success(f"{test_info}{test_result}")
     except ZeroDivisionError:

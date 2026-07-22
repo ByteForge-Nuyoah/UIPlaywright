@@ -34,3 +34,5 @@ class TestExportRecord:
         """导出录制文件：按用例数据执行完整导出流程。"""
         # 操作步骤：打开页面 → 按 page_no 翻页 → 触发导出录制文件流程
         self.page_obj.export_record_flow(case)
+        # 断言：流程完成后仍在导出记录页（查询按钮可见）
+        self.page_obj.assert_element_visible(self.page_obj.locator_button_search)

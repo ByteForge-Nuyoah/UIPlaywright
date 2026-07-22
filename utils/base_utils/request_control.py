@@ -12,10 +12,11 @@ from utils.files_utils.yaml_handle import YamlHandle
 from utils.files_utils.files_handle import get_files
 from utils.base_utils.base_request import BaseRequest
 from utils.report_utils.allure_handle import allure_step
+from utils.tools.sensitive_handle import mask_sensitive
 from utils.database_utils.mysql_handle import MysqlServer
 from utils.assertion_utils.assert_control import AssertHandle
 from utils.data_utils.data_handle import data_handle, eval_data
-from utils.data_utils.extract_data_handle import json_extractor, re_extract, response_extract
+from utils.data_utils.extract_data_handle import extract_by_type
 from playwright.sync_api import sync_playwright, BrowserContext, Page, APIRequestContext, APIResponse
 
 class RequestControl(BaseRequest):
@@ -70,9 +71,9 @@ class RequestControl(BaseRequest):
                          f"用例标题(title):  {type(request_data.get('title', None))} || {request_data.get('title', None)}\n" \
                          f"请求路径(url): {type(request_data.get('url', None))} || {request_data.get('url', None)}\n" \
                          f"请求方式(method): {type(request_data.get('method', None))} || {request_data.get('method', None)}\n" \
-                         f"请求头(headers): {type(request_data.get('headers', None))} || {request_data.get('headers', None)}\n" \
+                         f"请求头(headers): {type(request_data.get('headers', None))} || {mask_sensitive(request_data.get('headers', None))}\n" \
                          f"请求类型(request_type): {type(request_data.get('request_type', None))} || {request_data.get('request_type', None)}\n" \
-                         f"请求参数(payload): {type(request_data.get('payload', None))} || {request_data.get('payload', None)}\n" \
+                         f"请求参数(payload): {type(request_data.get('payload', None))} || {mask_sensitive(request_data.get('payload', None))}\n" \
                          f"响应断言(assert_response): {type(request_data.get('assert_response', None))} || {request_data.get('assert_response', None)}\n" \
                          f"后置提取参数(extract): {type(request_data.get('extract', None))} || {request_data.get('extract', None)}\n")
 
@@ -83,16 +84,16 @@ class RequestControl(BaseRequest):
                          f"用例标题(title):  {type(new_request_data.get('title', None))} || {new_request_data.get('title', None)}\n" \
                          f"请求路径(url): {type(new_request_data.get('url', None))} || {new_request_data.get('url', None)}\n" \
                          f"请求方式(method): {type(new_request_data.get('method', None))} || {new_request_data.get('method', None)}\n" \
-                         f"请求头(headers): {type(new_request_data.get('headers', None))} || {new_request_data.get('headers', None)}\n" \
+                         f"请求头(headers): {type(new_request_data.get('headers', None))} || {mask_sensitive(new_request_data.get('headers', None))}\n" \
                          f"请求类型(request_type): {type(new_request_data.get('request_type', None))} || {new_request_data.get('request_type', None)}\n" \
-                         f"请求参数(payload): {type(new_request_data.get('payload', None))} || {new_request_data.get('payload', None)}\n" \
+                         f"请求参数(payload): {type(new_request_data.get('payload', None))} || {mask_sensitive(new_request_data.get('payload', None))}\n" \
                          f"响应断言(assert_response): {type(new_request_data.get('assert_response', None))} || {new_request_data.get('assert_response', None)}\n" \
                          f"后置提取参数(extract): {type(new_request_data.get('extract', None))} || {new_request_data.get('extract', None)}\n" \
                          "=====================================================")
             return new_request_data
         except Exception as e:
             logger.error(f"接口数据处理异常：{e}")
-            raise f"接口数据处理异常：\n{e}"
+            raise RuntimeError(f"接口数据处理异常：\n{e}")
 
     @classmethod
     def api_step_record(cls, **kwargs) -> None:
@@ -103,14 +104,14 @@ class RequestControl(BaseRequest):
         title = kwargs.get("title")
         url = kwargs.get("url")
         method = kwargs.get("method")
-        headers = kwargs.get("headers")
+        headers = mask_sensitive(kwargs.get("headers"))
         request_type = kwargs.get("request_type")
-        payload = kwargs.get("payload")
+        payload = mask_sensitive(kwargs.get("payload"))
         files = kwargs.get("files")
         status_code = kwargs.get("status_code")
-        response_header = kwargs.get("response_header")
+        response_header = mask_sensitive(kwargs.get("response_header"))
         response_body = kwargs.get("response_body")
-        response_result = kwargs.get("response_result")
+        response_result = mask_sensitive(kwargs.get("response_result"))
 
         _res = ("\n-------------发送请求--------------------\n" \
                 f"ID: {key}\n" \
@@ -171,7 +172,7 @@ class RequestControl(BaseRequest):
 
             try:
                 new_api_data["response_result"] = response.json()
-            except:
+            except Exception:
                 new_api_data["response_result"] = response.text()
 
             self.api_step_record(**new_api_data)
@@ -205,74 +206,43 @@ class RequestControl(BaseRequest):
         default_results = {}
 
         for k, v in extract.items():
-            if k.lower() == "case":
+            source_name = k.lower()
+            if source_name == "case":
                 logger.info(f"数据来源：{k}")
                 # 将用例数据作为来源
                 for _k, _v in v.items():
-                    if _k.lower() == "type_jsonpath":
-                        for i, j in _v.items():
-                            case_results[i] = json_extractor(api_data, j)
-
-                    elif _k.lower() == "type_re":
-                        for i, j in _v.items():
-                            case_results[i] = re_extract(str(api_data), j)
-                    else:
-                        logger.error(f"提取方式： {_k} 错误，仅支持type_jsonpath、type_re两种")
+                    case_results.update(
+                        extract_by_type(_k, _v, json_source=api_data, text_source=str(api_data)))
                 logger.info(f"数据来源：{k}， 提取结果：{case_results} --")
-            elif k.lower() == "database":
+            elif source_name == "database":
                 logger.info(f"数据来源：{k}")
                 # 将数据库SQL执行结果作为来源
                 if v.get("sql"):
                     mysql = MysqlServer(**db_info)
-                    sql_result = mysql.query_all(v["sql"])
+                    sql_result = mysql.query_all(v["sql"], params=v.get("params"))
                     v.pop("sql")
                 else:
                     sql_result = None
                     logger.error(f"数据库提取参数必须传入sql")
                 if sql_result:
                     for _k, _v in v.items():
-                        if _k.lower() == "type_jsonpath":
-                            for i, j in _v.items():
-                                database_results[i] = json_extractor(sql_result, j)
-
-                        elif _k.lower() == "type_re":
-                            for i, j in _v.items():
-                                database_results[i] = re_extract(str(sql_result), j)
-                        else:
-                            logger.error(f"提取方式： {_k} 错误，仅支持type_jsonpath、type_re两种")
+                        database_results.update(
+                            extract_by_type(_k, _v, json_source=sql_result, text_source=str(sql_result)))
                 logger.info(f"数据来源：{k}， 提取结果：{database_results} --")
-            elif k.lower() == "response":
+            elif source_name == "response":
                 logger.info(f"数据来源：{k}")
                 # 来源=response
                 for _k, _v in v.items():
-                    if _k.lower() == "type_jsonpath":
-                        for i, j in _v.items():
-                            response_results[i] = json_extractor(response.json(), j)
-                    elif _k.lower() == "type_re":
-                        for i, j in _v.items():
-                            response_results[i] = re_extract(response.text, j)
-                    elif _k.lower() == "type_response":
-                        for i, j in _v.items():
-                            response_results[i] = response_extract(response, j)
-                    else:
-                        logger.error(f"提取方式： {_k} 错误，仅支持type_jsonpath、type_re、type_response三种")
+                    response_results.update(
+                        extract_by_type(_k, _v, json_source=response.json(),
+                                        text_source=response.text(), response=response))
                 logger.info(f"数据来源：{k}， 提取结果：{response_results} --")
             else:
                 logger.info(f"数据来源：Response对象")
                 # 直接k=type_jsonpath, type_re, type_response, 来源默认是response
-                if k.lower() == "type_jsonpath":
-                    for i, j in v.items():
-                        default_results[i] = json_extractor(response.json(), j)
-                elif k.lower() == "type_re":
-                    for i, j in v.items():
-                        default_results[i] = re_extract(response.text, j)
-                elif k.lower() == "type_response":
-                    for i, j in v.items():
-                        default_results[i] = response_extract(response, j)
-                else:
-                    logger.error(
-                        f"数据来源默认是Response对象， 提取方式： {k} 错误，仅支持type_jsonpath、type_re、type_response三种")
-
+                default_results.update(
+                    extract_by_type(k, v, json_source=response.json(),
+                                    text_source=response.text(), response=response))
                 logger.info(f"数据来源：Response对象， 提取结果：{default_results}")
 
         return {**case_results, **response_results, **database_results, **default_results}

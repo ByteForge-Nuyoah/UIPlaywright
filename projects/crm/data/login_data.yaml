@@ -1,0 +1,11 @@
+# 场景：CRM 登录
+user_with_phone_page:
+  - title: "网页登录，正确用户名和密码登录成功"
+    login: "${admin_user_name}"
+    password: "${admin_user_password}"
+    run: true
+
+  # - title: "网页登录，错误密码登录失败"
+  #   login: "${admin_user_name}"
+  #   password: "wrong_password"
+  #   run: true

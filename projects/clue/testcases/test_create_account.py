@@ -50,6 +50,13 @@ class TestCreateAccount:
             pytest.skip("CLUE_TEST_ACCOUNT_PASSWORD 未配置，跳过创建账号用例")
         title = case.get("title", "")
 
+        # 成功用例用随机 user_name + phone，避免二次运行账号已存在导致失败（clue 无删除接口，无法 teardown 清理）
+        if "成功" in title:
+            from utils.data_utils.faker_handle import FakerData
+            import random
+            user_name = f"auto_{FakerData.generate_identifier(char_len=8)}"
+            phone = f"199{random.randint(10000000, 99999999)}"
+
         # 操作步骤：经左侧菜单进入账号管理页 → 输入手机号/姓名/用户名/密码 → 提交创建账号表单
         account_page = (
             self.common_page

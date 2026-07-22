@@ -50,3 +50,10 @@ node_modules/
 # OMC / Claude local state
 .omc/
 .claude/
+
+# Allure 二进制（改由 CI/Docker 运行时安装，不入库）
+lib/allure-*/
+
+# Windows 便捷打开 allure 报告的助手（不入库，allure_handle 已容错跳过）
+config/allure_config/*.exe
+config/allure_config/*.bat

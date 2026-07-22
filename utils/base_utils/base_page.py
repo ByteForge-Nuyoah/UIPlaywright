@@ -31,23 +31,23 @@ class BasePage:
      • reload(**kwargs)：重新加载当前页面
     """
 
-    @allure.step("--> 访问页面，路由：{url}，超时时间： {timeout} 秒")
-    def visit(self, url: str, timeout=5) -> None:
+    @allure.step("--> 访问页面，路由：{url}，超时时间： {timeout} 毫秒")
+    def visit(self, url: str, timeout=5000) -> None:
         """
         访问页面
         :param url: url
-        :param timeout: 超时时间，默认是50000ms
+        :param timeout: 超时时间（毫秒），默认 5000ms
         """
         logger.info(f"--> 访问页面，路由：{url}")
-        self.page.goto(url, timeout=timeout * 1000)
+        self.page.goto(url, timeout=timeout)
         self.wait_for_load_state(state='domcontentloaded')
 
-    @allure.step("--> 刷新页面，且状态为：{state}， 超时时间： {timeout} 秒")
-    def refresh(self, timeout=5,
+    @allure.step("--> 刷新页面，且状态为：{state}， 超时时间： {timeout} 毫秒")
+    def refresh(self, timeout=5000,
                 state: Optional[Literal["domcontentloaded", "load", "networkidle"]] = 'networkidle') -> None:
         """
         刷新页面
-        :param timeout: 超时时间，默认是50000ms
+        :param timeout: 超时时间（毫秒），默认 5000ms
         :param state: Optional[Literal["domcontentloaded", "load", "networkidle"]] = 'networkidle'
         官方默认是默认为 load， 该方法默认是networkidle
         state:
@@ -55,29 +55,28 @@ class BasePage:
         load - 等到加载load事件
         networkidle - 等到500 ms没有网络请求
         """
-        logger.info(f"--> 刷新页面，且状态为：{state}， 超时时间： {timeout} 秒")
-        self.page.reload(timeout=timeout * 1000, wait_until=state)
+        logger.info(f"--> 刷新页面，且状态为：{state}， 超时时间： {timeout} 毫秒")
+        self.page.reload(timeout=timeout, wait_until=state)
 
     # --------------------------------- 等待 ---------------------------------#
-    @allure.step("--> 强制等待{timeout}秒")
-    def wait(self, timeout=3):
+    @allure.step("--> 强制等待{timeout}毫秒")
+    def wait(self, timeout=3000):
         """
-        强制等待，官方默认单位是毫秒，这里的timeout传参默认单位是秒。
+        强制等待，单位毫秒（与 Playwright 原生一致），默认 3000ms。
 
         ⚠️ 仅在 Playwright 的 auto-wait/`expect()` 无法覆盖（如等待外部异步副作用、
         debug 排查）时使用；常规场景请优先用 `wait_for_load_state` 或
         `expect(locator).to_be_visible(...)` 等基于条件的等待。
         """
-        logger.info(f'--> 强制等待{timeout}秒')
-        self.page.wait_for_timeout(timeout * 1000)
+        logger.info(f'--> 强制等待{timeout}毫秒')
+        self.page.wait_for_timeout(timeout)
 
-    @allure.step("--> 等待页面加载，且状态为：{state}, 超时{timeout}秒")
+    @allure.step("--> 等待页面加载，且状态为：{state}, 超时{timeout}毫秒")
     def wait_for_load_state(self,
                             state: Optional[Literal["domcontentloaded", "load", "networkidle"]] = 'domcontentloaded',
-                            timeout=30):
+                            timeout=30000):
         """
-        在页面达到所需的加载状态时返回
-        官方默认的timeout单位是毫秒，这里timeout传参默认是秒
+        在页面达到所需的加载状态时返回，单位毫秒，默认 30000ms
         官方默认是默认为 load， 该方法默认是domcontentloaded（优化后）
         state:
         domcontentloaded - 等到加载DOMContentLoaded事件（推荐，最快）
@@ -85,26 +84,30 @@ class BasePage:
         networkidle - 等到500 ms没有网络请求（最慢，仅特殊场景使用）
         """
         logger.info(f'--> 等待页面加载，且状态为:{state}')
-        self.page.wait_for_load_state(state, timeout=timeout * 1000)
+        self.page.wait_for_load_state(state, timeout=timeout)
 
     # --------------------------------- 页面操作和交互---------------------------------#
     @allure.step("--> 点击元素 | 元素定位：{locator}")
-    def click(self, locator: str) -> None:
+    def click(self, locator: str, timeout: int = None) -> None:
         """
         点击操作封装
         封装目的：
         1. 统一添加日志记录，方便调试
         2. 统一添加异常处理，捕获点击失败的情况
         3. 集成 Allure 步骤装饰器，使报告更清晰
-        
+
         :param locator: 元素定位 (xpath, css, id 等)
+        :param timeout: 超时时间（毫秒），与 Playwright 原生一致；为 None 时使用 Playwright 默认值
         """
         try:
             logger.info(f"--> 点击元素 | 元素定位：{locator}")
-            self.page.click(locator)
+            if timeout is not None:
+                self.page.click(locator, timeout=timeout)
+            else:
+                self.page.click(locator)
         except Exception as e:
             logger.error(f"--> 点击元素 | 元素定位：{locator}，报错：{e}")
-            raise Exception(f"--> 点击元素 | 元素定位：{locator}，报错：{e}")
+            raise
 
     @allure.step("--> checkbox勾选元素 | 元素定位： {locator}")
     def check(self, locator: str) -> None:
@@ -156,7 +159,7 @@ class BasePage:
             self.page.fill(selector=locator, value=text)
         except Exception as e:
             logger.error(f"--> 输入内容： {text} | 元素定位： {locator}， 报错：{e}")
-            raise Exception(f"--> 输入内容： {text} | 元素定位： {locator}， 报错：{e}")
+            raise
 
     @allure.step("--> 键盘键入内容： {text} | 元素定位： {locator}")
     def type(self, locator: str, text: str) -> None:
@@ -173,12 +176,12 @@ class BasePage:
 
     @allure.step("--> 清除元素内容，元素定位： {locator}")
     def clear(self, locator: str):
-        self.page.locator(locator).click()
+        logger.info(f'--> 清除元素内容，元素定位： {locator}')
         try:
-            logger.info(f'--> 清除元素内容，元素定位： {locator}')
             self.page.locator(locator).clear()
         except Exception as e:
             logger.error(f'ERROR-->清除失败：{e}')
+            raise
 
     @allure.step("--> 选择选项： {option} | 元素定位： {locator}")
     def select_option(self, locator: str, option: str) -> None:
@@ -411,7 +414,7 @@ class BasePage:
             return attr_value
         except Exception as e:
             logger.error(f"--> 获取元素属性值 | 元素定位： {locator}，报错信息：{e} ")
-            return None
+            raise
 
     @allure.step("--> 获取元素的文本内容 | 元素定位： {locator}")
     def get_inner_text(self, locator: str) -> Union[str, None]:
@@ -428,7 +431,7 @@ class BasePage:
             return text_value
         except Exception as e:
             logger.error(f"ERROR-->获取元素的文本内容 | 元素定位： {locator}，报错信息：{e} ")
-            return None
+            raise
 
     @allure.step("--> 获取元素的整个html源码内容 | 元素定位： {locator}")
     def get_inner_html(self, locator: str) -> Union[str, None]:
@@ -445,7 +448,7 @@ class BasePage:
             return html_value
         except Exception as e:
             logger.error(f"ERROR-->获取元素的整个html源码内容 | 元素定位： {locator}，报错信息：{e} ")
-            return None
+            raise
 
     @allure.step("获取当前页面的url")
     def get_page_url(self) -> AnyStr:
@@ -461,7 +464,7 @@ class BasePage:
             return url_value
         except Exception as e:
             logger.error(f"ERROR --> 获取当前页面的url，报错信息：{e} ")
-            return None
+            raise
 
     # --------------------------------- 断言（页面断言） ---------------------------------#
     """
@@ -518,15 +521,15 @@ class BasePage:
         expect(elem).to_be_disabled()
 
     @allure.step("--> 断言 | 验证输入框可编辑 | 元素定位： {locator}")
-    def is_input_editable(self, locator: str, timeout=5) -> None:
+    def is_input_editable(self, locator: str, timeout=5000) -> None:
         """
         断言：验证输入框是否可编辑
         :param locator: 元素定位
-        :param timeout: 超时时间， 默认5000ms
+        :param timeout: 超时时间（毫秒），默认 5000ms
         """
         logger.info(f"--> 断言 | 验证输入框可编辑 | 元素定位： {locator}")
         elem = self.page.locator(locator)
-        expect(elem).to_be_editable(timeout=timeout * 1000)
+        expect(elem).to_be_editable(timeout=timeout)
 
     @allure.step("--> 断言 | 验证容器为空 | 元素定位： {locator}")
     def is_container_empty(self, locator: str) -> None:
@@ -569,28 +572,28 @@ class BasePage:
         expect(elem).to_be_hidden()
 
     @allure.step("--> 断言 | 验证输入框具有值(预期)： {value} | 元素定位： {locator}")
-    def is_input_have_value(self, locator: str, value: str, timeout=5) -> None:
+    def is_input_have_value(self, locator: str, value: str, timeout=5000) -> None:
         """
         断言：验证输入框是否具有指定的值
         :param locator: 元素定位
         :param value: 指定值
-        :param timeout: 超时时间， 默认5000ms
+        :param timeout: 超时时间（毫秒），默认 5000ms
         """
         logger.info(f"--> 断言 | 验证元素具有值(预期)： {value} | 元素定位： {locator}")
         elem = self.page.locator(locator)
-        expect(elem).to_have_value(value=value, timeout=timeout * 1000)
+        expect(elem).to_have_value(value=value, timeout=timeout)
 
     @allure.step("--> 断言 | 验证输入框不具有值(预期)： {value} | 元素定位： {locator}")
-    def is_input_not_have_value(self, locator: str, value: str, timeout=5) -> None:
+    def is_input_not_have_value(self, locator: str, value: str, timeout=5000) -> None:
         """
         断言：验证输入框是否具有指定的值
         :param locator: 元素定位
         :param value: 指定值
-        :param timeout: 超时时间， 默认5000ms
+        :param timeout: 超时时间（毫秒），默认 5000ms
         """
         logger.info(f"--> 断言 | 验证元素具有值(预期)： {value} | 元素定位： {locator}")
         elem = self.page.locator(locator)
-        expect(elem).not_to_have_value(value=value, timeout=timeout * 1000)
+        expect(elem).not_to_have_value(value=value, timeout=timeout)
 
     @allure.step("--> 断言 | 验证元素具有： {text} | 元素定位： {locator}")
     def have_text(self, locator: str, text: str) -> None:
@@ -645,16 +648,17 @@ class BasePage:
         elem = self.page.locator(locator)
         expect(elem).to_have_count(elem_count)
 
-    @allure.step("---> 断言 | 验证元素具有CSS属性(预期)： {css_value} | 元素定位： {locator}")
-    def is_element_have_css(self, locator: str, css_value: Union[str, Pattern[str]]) -> None:
+    @allure.step("---> 断言 | 验证元素具有CSS属性(预期)： {css_name}={css_value} | 元素定位： {locator}")
+    def is_element_have_css(self, locator: str, css_name: str, css_value: Union[str, Pattern[str]]) -> None:
         """
-        断言：验证元素个数是否与期望值相等
+        断言：验证元素是否具有指定的CSS属性值
         :param locator: 元素定位
-        :param css_value: css属性，接收str以及正则表达式， 例如"button"， 或者"display", "flex"
+        :param css_name: css属性名，例如 "display", "flex"
+        :param css_value: css属性值，接收str以及正则表达式
         """
-        logger.info(f"---> 断言 | 验证元素具有CSS属性(预期)： {css_value} | 元素定位： {locator}")
+        logger.info(f"---> 断言 | 验证元素具有CSS属性(预期)： {css_name}={css_value} | 元素定位： {locator}")
         elem = self.page.locator(locator)
-        expect(elem).to_have_css(css_value)
+        expect(elem).to_have_css(css_name, css_value)
 
     @allure.step("---> 断言 | 验证元素具有ID(预期)： {id_name} | 元素定位： {locator}")
     def is_element_have_id(self, locator: str, id_name: str) -> None:
@@ -665,7 +669,7 @@ class BasePage:
         """
         logger.info(f"---> 断言 | 验证元素具有ID(预期)： {id_name} | 元素定位： {locator}")
         elem = self.page.locator(locator)
-        expect(elem).to_have_css(id_name)
+        expect(elem).to_have_id(id_name)
 
     @allure.step("---> 断言 | 验证元素具有JavaScript属性(预期)： {js_value} | 元素定位： {locator}")
     def is_element_have_js_property(self, locator: str, js_value: str) -> None:
@@ -675,7 +679,8 @@ class BasePage:
         :param js_value: 元素id属性
         """
         logger.info(f"---> 断言 | 验证元素具有JavaScript属性(预期)： {js_value} | 元素定位： {locator}")
-        expect(locator).to_have_js_property(js_value)
+        elem = self.page.locator(locator)
+        expect(elem).to_have_js_property(js_value)
 
     # --------------------------------- 断言（自定义） ---------------------------------#
     @allure.step("--> 断言 | 验证元素的属性 {attr_name} 具有值(预期)： {value} | 元素定位： {locator}")

@@ -38,7 +38,7 @@ class TestDataPage:
     def test_data_interaction(self, case):
         """欢迎页交互：HomePage → DataPage 链式调用执行完整流程后断言仍在 /welcome。"""
         # 操作步骤：首页 → 数据概览页 → 切换月份/范围/范围/公司 → 执行交互流程
-        (
+        data_page = (
             self.home_page
             .goto_data()
             .data_interaction_flow(
@@ -50,5 +50,9 @@ class TestDataPage:
             )
         )
 
-        # 断言：交互完成后页面仍在 /welcome
-        self.home_page.assert_url_contains(url="/welcome")
+        # 断言：交互完成后仍在 /welcome
+        data_page.assert_url_contains(url="/welcome")
+        # 断言：流程切换后「事故线索」tab 可见
+        data_page.assert_element_visible(data_page.locator_tab_accident_clue)
+        # 断言：「线索跟进情况」section 可见
+        data_page.assert_element_visible(data_page.locator_section_clue_follow)

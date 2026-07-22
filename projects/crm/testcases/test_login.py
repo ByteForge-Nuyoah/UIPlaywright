@@ -1,0 +1,48 @@
+# -*- coding: utf-8 -*-
+# @Version: Python 3.13
+# @Author  : 会飞的🐟
+# @File    : test_login.py
+# @Software: PyCharm
+# @Desc    : CRM 登录功能测试用例
+
+import os
+
+import pytest
+from loguru import logger
+from playwright.sync_api import Page
+
+from pages.login_page import LoginPage
+from utils.files_utils.yaml_handle import YamlHandle
+
+
+@pytest.mark.login
+# 登录用例本身要验证 UI 登录流程，必须使用未登录的全新上下文，
+# 通过 marker 覆盖项目级 conftest 注入的 storage_state。
+@pytest.mark.browser_context_args(storage_state=None)
+class TestLogin:
+    """CRM 登录"""
+    # 动态获取 yaml 数据文件路径
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "login_data.yaml")
+    cases = YamlHandle(data_path).read_yaml
+
+    @pytest.fixture(autouse=True)
+    def setup_teardown_for_each(self, page: Page):
+        logger.info("\n\n---------------Start: 开始测试-------------")
+        self.login_page = LoginPage(page)
+        self.login_page.navigate()
+        yield
+        # 清除登录 cookies，避免影响其他登录用例
+        page.context.clear_cookies()
+
+    @pytest.mark.parametrize("case", cases["user_with_phone_page"], ids=lambda x: x["title"])
+    def test_login_user(self, case):
+        """
+        网页登录：输入用户名密码并提交。
+        TODO: 定位器（login_page.py）与登录后跳转路径填好后，按 CRM 实际情况补充成功/失败断言
+              （可参照 projects/clue/testcases/test_login.py 的写法）
+        """
+        login = case.get("login")
+        password = case.get("password")
+        self.login_page.login_on_page_flow(login=login, password=password)
+        # TODO: 成功用例断言跳转到首页；失败用例断言仍停留在登录页
+        assert self.login_page.page is not None

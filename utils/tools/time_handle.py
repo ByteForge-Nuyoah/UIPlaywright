@@ -14,7 +14,7 @@ def timestamp_strftime(timestamp, style="%Y-%m-%d %H:%M:%S"):
     """
     try:
         if isinstance(timestamp, str):
-            timestamp = eval(timestamp)
+            timestamp = float(timestamp)
         return time.strftime(style, time.localtime(float(timestamp / 1000)))
     except Exception as e:
         return f"timestamp或者style格式错误：{e}"

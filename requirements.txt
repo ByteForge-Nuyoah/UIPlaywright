@@ -1,7 +1,6 @@
 allure-pytest==2.15.3
 allure-python-commons==2.15.3
 attrs==25.4.0
-bcrypt==5.0.0
 cachetools==6.2.4
 certifi==2026.1.4
 cffi==2.0.0
@@ -13,7 +12,6 @@ Faker==40.1.2
 greenlet==3.3.0
 idna==3.11
 iniconfig==2.3.0
-invoke==2.2.1
 jsonpath==0.82.2
 loguru==0.7.3
 lxml==6.0.2
@@ -23,7 +21,6 @@ paramiko==4.0.0
 pathvalidate==3.3.1
 playwright==1.57.0
 pluggy==1.6.0
-premailer==3.10.0
 pycparser==2.23
 pycryptodome==3.23.0
 pyee==13.0.0

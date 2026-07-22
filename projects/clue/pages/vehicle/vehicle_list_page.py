@@ -86,6 +86,7 @@ class VehicleListPage(BasePage):
                 self.click_export_desensitized()
             popup_page = page_info.value
         download = download_info.value
+        download.path()  # 等待下载完成，避免 popup.close 中断大文件下载
         popup_page.close()
         return download
 
@@ -100,6 +101,7 @@ class VehicleListPage(BasePage):
                 self.click_export_sensitive_confirm()
             popup_page = page_info.value
         download = download_info.value
+        download.path()  # 等待下载完成，避免 popup.close 中断大文件下载
         popup_page.close()
         return download
 

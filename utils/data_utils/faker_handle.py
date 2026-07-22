@@ -195,6 +195,8 @@ class FakerData:
         """
         :return:生成随机标识，满足要求：长度为2~100（这里长度通过传参控制，默认为8）， 只能包含数字，字母，下划线(_)，中划线(-)，英文句号(.)，必须以数字和字母开头，不能以下划线/中划线/英文句号开头和结尾
         """
+        if char_len < 2:
+            raise ValueError("char_len 必须 >= 2，否则无法满足首尾为字母数字的标识符规则")
         while True:
             identifier = ''.join(
                 random.choices(string.ascii_letters + string.digits + '_.-', k=char_len))  # 生成指定长度的随机标识
@@ -202,7 +204,7 @@ class FakerData:
             if (
                     re.match(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,98}[a-zA-Z0-9]$', identifier) and
                     not (identifier.startswith('_') or identifier.startswith('-') or identifier.startswith('.')) and
-                    not (identifier.endswith('_') or identifier.startswith('-') or identifier.endswith('.'))
+                    not (identifier.endswith('_') or identifier.endswith('-') or identifier.endswith('.'))
             ):
                 return identifier
 

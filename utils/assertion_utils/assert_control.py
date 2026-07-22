@@ -59,7 +59,7 @@ class AssertUtils:
         """
         if "sql" not in self.assert_data.keys() or self.assert_data["sql"] is None:
             logger.error(f"断言数据: {self.assert_data} 缺少 'sql' 属性或 'sql' 为空")
-            raise ValueError("断言数据: {self.assert_data} 缺少 'sql' 属性或 'sql' 为空")
+            raise ValueError(f"断言数据: {self.assert_data} 缺少 'sql' 属性或 'sql' 为空")
         return self.db_connect.query_all(sql=self.assert_data["sql"])
 
     def get_actual_value_by_response(self):

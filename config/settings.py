@@ -6,13 +6,52 @@
 # @Desc: 项目配置文件
 
 import os
-from config.path_config import LOG_DIR
+from config.global_vars import GLOBAL_VARS
 
-# ------------------------------------ 测试数据配置 ----------------------------------------------------#
-# 这里的 ENV_VARS 只是一个占位符，
-# 真实的数据会在运行时由各项目下的 project_settings.py 动态填充，
-# run.py 会根据 -project 和 -env 参数导入对应项目的 ENV_VARS 并写入 GLOBAL_VARS 中使用。
-ENV_VARS = {}
+# ------------------------------------ 路径配置 ----------------------------------------------------#
+# 项目根目录
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# 工具类目录
+UTILS_DIR = os.path.join(BASE_DIR, "utils")
+
+# 配置模块目录
+CONF_DIR = os.path.join(BASE_DIR, "config")
+
+# 用户登录态保存目录
+AUTH_DIR = os.path.join(BASE_DIR, ".auth")
+if not os.path.exists(AUTH_DIR):
+    os.mkdir(AUTH_DIR)
+
+# 测试过程中所需上传附件目录
+FILES_DIR = os.path.join(BASE_DIR, "files")
+
+# 日志/报告保存目录
+OUT_DIR = os.path.join(BASE_DIR, "outputs")
+if not os.path.exists(OUT_DIR):
+    os.mkdir(OUT_DIR)
+
+# 报告保存目录
+REPORT_DIR = os.path.join(OUT_DIR, "report")
+if not os.path.exists(REPORT_DIR):
+    os.mkdir(REPORT_DIR)
+
+# 日志保存目录
+LOG_DIR = os.path.join(OUT_DIR, "log")
+if not os.path.exists(LOG_DIR):
+    os.mkdir(LOG_DIR)
+
+# playwright执行过程中产生的图片，视频保存的目录
+TRACING_DIR = os.path.join(OUT_DIR, "tracing")
+
+# 第三方库目录
+LIB_DIR = os.path.join(BASE_DIR, "lib")
+
+# Allure报告，测试结果集目录
+ALLURE_RESULTS_DIR = os.path.join(REPORT_DIR, "allure_results")
+
+# Allure报告，HTML测试报告目录
+ALLURE_HTML_DIR = os.path.join(REPORT_DIR, "allure_html")
 
 
 # ------------------------------------ pytest相关配置 ----------------------------------------------------#
@@ -29,6 +68,12 @@ class RunConfig:
     # 视频录制配置 (on, off, retain-on-failure)
     video = "off"
 
+    # 截图配置 (on, off, only-on-failure)
+    screenshot = "on"
+
+    # trace 配置 (on, off, retain-on-failure)
+    tracing = "retain-on-failure"
+
     # 窗口大小配置
     """
     playwright 默认启动的浏览器窗口大小是 1280x720。
@@ -39,7 +84,7 @@ class RunConfig:
        便于比对截图与视频，保证结果在不同机器上的一致性。
     """
     # 如果已在 browser_type_launch_args 中启用 "--start-maximized"，则此处指定的具体尺寸不会生效
-    # 设置为 None 表示禁用 viewport 固定大小，交给浏览器窗口自己决定大小（更适合演示模式）
+    # 设置为 None 表示禁用 viewport 固定大小，交给浏览器窗口自己决定大小
     window_size = None  # {"width": 1920, "height": 1080}
 
     # 浏览器页面
@@ -52,8 +97,38 @@ class RunConfig:
     reruns_delay = 5
 
     # 当达到最大失败数，停止执行
-    max_fail = "10"
+    max_fail = 10
 
+# 集中定义，避免在 root/项目级 conftest 多处硬编码同一个字典。
+DEFAULT_WINDOW_SIZE = {"width": 1920, "height": 1080}
+
+
+def resolve_window_size():
+    """
+    统一解析视口尺寸，优先级：
+      GLOBAL_VARS["window_size"] > RunConfig.window_size > DEFAULT_WINDOW_SIZE
+    供 root conftest 的 browser_context_args / browser_type_launch_args
+    及项目级 conftest 的预登录 context 共用，保证全会话视口一致。
+    """
+    return GLOBAL_VARS.get("window_size") or RunConfig.window_size or DEFAULT_WINDOW_SIZE
+
+
+# ------------------------------------ 定时任务配置 ----------------------------------------------------#
+# 由 utils/scheduler_utils/task_scheduler.py 读取
+scheduler = {
+    # 每天执行的时间，24 小时制字符串，如 "23:00"
+    "time": "23:00",
+    # schedule 库轮询间隔（秒），即到点检查频率
+    "interval": 60,
+    # 定时任务触发的 run.py 命令参数（不含 python 解释器与 run.py 本身，由 task_scheduler 自动拼接）
+    # 支持任意 run.py 参数，如 -env / -project / -mode / -report / -browser / -m 等
+    "run_args": [
+        "-env", "test",
+        "-report", "yes",
+        "-mode", "headless",
+        "-project", "clue",
+    ],
+}
 
 # ------------------------------------ 配置信息 ----------------------------------------------------#
 # 0表示默认不发送任何通知， 1 代表钉钉通知，2 代表企业微信通知， 3 代表邮件通知， 4 代表所有途径都发送通知
@@ -65,16 +140,6 @@ LOG_INFO = [
     {"level": "INFO", "filename": os.path.join(LOG_DIR, "service_info.log")},
     {"level": "TRACE", "filename": os.path.join(LOG_DIR, "service_full.log")}
 ]
-"""
-支持的日志级别：
-    TRACE: 最低级别的日志级别，用于详细追踪程序的执行。
-    DEBUG: 用于调试和开发过程中打印详细的调试信息。
-    INFO: 提供程序执行过程中的关键信息。
-    SUCCESS: 用于标记成功或重要的里程碑事件。
-    WARNING: 表示潜在的问题或不符合预期的情况，但不会导致程序失败。
-    ERROR: 表示错误和异常情况，但程序仍然可以继续运行。
-    CRITICAL: 表示严重的错误和异常情况，可能导致程序崩溃或无法正常运行。
-"""
 
 # ------------------------------------ 邮件配置信息 ----------------------------------------------------#
 
@@ -143,7 +208,6 @@ wechat = {
 # ------------------------------------ 企业微信通知内容 ----------------------------------------------------#
 wechat_content = """
            各位同事, 大家好:
-
            ### 自动化用例于 ${start_time} 开始运行，运行时长：${run_time} s， 目前已执行完成。
            --------------------------------
            #### 测试人： ${tester}
@@ -158,7 +222,6 @@ wechat_content = """
            - 跳过用例个数（skipped）: <font color=\"comment\"> ${skipped} 个</font>
            - 失败重试用例个数 * 次数之和（rerun）: <font color=\"comment\"> ${rerun} 个</font>
            - 成  功   率: <font color=\"info\"> ${pass_rate} % </font>
-
            **********************************
            附件为具体的测试报告，详细情况可下载附件查看， 非相关负责人员可忽略此消息。谢谢。
        """

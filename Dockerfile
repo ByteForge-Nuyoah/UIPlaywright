@@ -11,11 +11,17 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     fonts-noto-cjk \
-    openjdk-21-jre-headless \
+    openjdk-17-jre-headless \
     tzdata \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
+
+# 安装 Allure 命令行（不再依赖仓库内置 lib/allure，减小镜像与仓库体积）
+RUN curl -o allure-2.44.0.tgz -Ls https://github.com/allure-framework/allure2/releases/download/2.44.0/allure-2.44.0.tgz \
+    && tar -zxvf allure-2.44.0.tgz -C /opt \
+    && ln -sf /opt/allure-2.44.0/bin/allure /usr/bin/allure \
+    && rm allure-2.44.0.tgz
 
 COPY requirements.txt ./
 RUN python -m pip install --upgrade pip \

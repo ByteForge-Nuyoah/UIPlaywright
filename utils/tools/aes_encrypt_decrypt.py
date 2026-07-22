@@ -78,5 +78,9 @@ class Encrypt:
         """AES解密 """
         cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
         content = base64.b64decode(content)
-        text = cipher.decrypt(content).decode('utf-8')
-        return text.rstrip(self.coding)
+        decrypted = cipher.decrypt(content)
+        # PKCS7 去填充：末字节为 padding 长度，精确切片（不依赖加密时遗留的 self.coding 状态）
+        pad_len = decrypted[-1] if decrypted else 0
+        if 0 < pad_len <= 16:
+            decrypted = decrypted[:-pad_len]
+        return decrypted.decode('utf-8')

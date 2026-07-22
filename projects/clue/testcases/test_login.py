@@ -54,7 +54,7 @@ class TestLogin:
         # 断言：按标题分支
         if "成功" in title:
             # 断言：登录成功，页面进入 /welcome
-            self.login_page.have_url(url="/welcome")
+            self.login_page.assert_url_contains(url="/welcome")
             # 断言：导航栏右上角用户头像区已渲染（登录成功才会出现）
             # 说明：当前系统头像是 ant-design Avatar（span），非 <a> 标签无 href，
             #       故用头像区容器可见性替代模板原「头像 a 标签 href=/${login}」断言

@@ -5,6 +5,7 @@
 # @Software: PyCharm
 # @Desc:
 
+import ast
 from loguru import logger
 
 
@@ -17,7 +18,7 @@ def eval_data(data):
             return data
         if data.isdigit():
             return data
-        value = eval(data)
+        value = ast.literal_eval(data)
         if hasattr(value, "__call__"):
             return data
         return value

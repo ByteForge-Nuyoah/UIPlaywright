@@ -5,8 +5,30 @@
 # @Software: PyCharm
 # @Desc: 日志处理
 
+import os
 import sys
 from loguru import logger
+
+# 控制台日志按级别着色（24-bit ANSI 精确匹配指定 hex）
+_LEVEL_FG = {
+    "TRACE": "\033[38;2;136;136;136m",    # #888888 灰
+    "DEBUG": "\033[38;2;0;153;204m",      # #0099cc 青蓝
+    "INFO": "\033[38;2;51;187;51m",       # #33bb33 绿
+    "SUCCESS": "\033[38;2;51;187;51m",    # 与 INFO 同色
+    "WARNING": "\033[38;2;255;170;0m",    # #ffaa00 橙黄
+    "ERROR": "\033[38;2;238;34;34m",      # #ee2222 红
+    "CRITICAL": "\033[38;2;153;0;0m",     # #990000 暗红（FATAL）
+}
+_RESET = "\033[0m"
+
+
+def _console_sink(message):
+    """控制台 sink：按日志级别着色整个日志行（24-bit ANSI）。"""
+    color = _LEVEL_FG.get(message.record["level"].name, "")
+    text = str(message)
+    if not text.endswith("\n"):
+        text += "\n"
+    sys.stderr.write(f"{color}{text}{_RESET}" if color else text)
 
 
 def capture_logs(log_info: list):
@@ -43,10 +65,10 @@ def capture_logs(log_info: list):
 
     # 添加控制台输出，只添加一次，并开启颜色
     logger.add(
-        sink=sys.stderr,
+        sink=_console_sink,
         level="DEBUG",  # 控制台默认输出 DEBUG 级别及以上
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{module}.{function}.{line}</cyan> : <level>{message}</level>",
-        colorize=True
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {module}.{function}.{line} : {message}",
+        colorize=False,  # 着色由 _console_sink 按 24-bit ANSI 处理
     )
 
     for log in log_info:
@@ -70,6 +92,22 @@ def capture_logs(log_info: list):
                    enqueue=True
                    )
         if filter_type:
-            dic["filter"] = lambda x: filter_type in str(x['level']).upper()
+            dic["filter"] = lambda x, ft=filter_type: x["level"].name == ft
 
         logger.add(**dic)
+
+    # 可选结构化日志（JSONL）：设置环境变量 LOG_STRUCTURED=1 时启用，
+    # 额外输出 outputs/log/service.jsonl，便于 CI / 日志系统机器解析。默认关闭，非破坏。
+    if os.getenv("LOG_STRUCTURED", "").lower() in ("1", "true", "yes"):
+        from config.settings import LOG_DIR
+        json_path = os.path.join(LOG_DIR, "service.jsonl")
+        logger.add(
+            sink=json_path,
+            level="DEBUG",
+            serialize=True,
+            rotation="3 MB",
+            retention="3 days",
+            encoding="utf-8",
+            enqueue=True,
+        )
+        logger.info(f"结构化日志（JSON）已启用：{json_path}")

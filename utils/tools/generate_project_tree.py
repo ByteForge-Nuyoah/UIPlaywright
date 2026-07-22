@@ -61,7 +61,7 @@ class DirectionTree:
 
 
 if __name__ == '__main__':
-    from config.path_config import BASE_DIR
+    from config.settings import BASE_DIR
     ignore_list = [
         '\.git', '__pycache__', 'venv', '.+\.whl', '\.idea', '.+\.jpg', '.+\.png',
         'css', 'admin', 'tool.py', 'db.sqlite3', "outputs", "lib", ".pytest_cache"

@@ -35,20 +35,6 @@ PROJECT_INTERFACE_DIR = os.path.join(
 STORAGE_STATE_TTL = 3600
 
 
-def pytest_configure(config):
-    """注册 clue 项目专属 markers（从 root pytest.ini 下沉，支持多项目隔离）。"""
-    for marker in [
-        "login: login cases",
-        "account: account related cases",
-        "data: data page interaction cases",
-        "vehicle: vehicle management/list cases",
-        "export: export page cases",
-        "api: api interface cases",
-        "recordings: playwright recorded cases converted to POM",
-    ]:
-        config.addinivalue_line("markers", marker)
-
-
 def _jwt_exp(token):
     """
     解码 JWT token 的 payload，返回 exp（过期时间戳）；非 JWT 或无 exp 返回 None。
@@ -105,7 +91,7 @@ def login_and_save_state(page, login, password, state_path):
     复用 LoginPage，消除 conftest 内联登录代码重复。
     """
     login_page = LoginPage(page)
-    login_page.navigate(timeout=30000)
+    login_page.navigate(timeout=30)
     login_page.login_on_page_flow(login=login, password=password)
     # 等到 URL 离开登录页（token 已被前端写进 localStorage）
     page.wait_for_url(lambda url: "/user/login" not in url, timeout=15000)
