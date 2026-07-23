@@ -147,7 +147,10 @@ def _post_run_report(kwargs, env_vars):
         allure_report=ALLURE_HTML_DIR,
         windows_title=env_vars["common"]["project_name"],
         report_name=env_vars["common"]["report_title"],
-        env_info={"运行环境": env_vars["common"]["env"]},
+        env_info={
+            "运行环境": env_vars["common"]["env_url"],
+            "测试人员": env_vars["common"]["tester"],
+        },
         allure_config_path=os.path.join(LIB_DIR, "allure_config"),
         attachment_path=os.path.join(REPORT_DIR, "autotest_report.zip"),
     )

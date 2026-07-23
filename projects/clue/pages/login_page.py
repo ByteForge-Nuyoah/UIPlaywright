@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : login_page.py
-# @Software: PyCharm
 # @Desc    : 登录页
 
 import allure
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from config.global_vars import GLOBAL_VARS
 from utils.base_utils.base_page import BasePage
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 
 class LoginPage(BasePage):
-    """
-    登录页。
-    """
     # 网页登录
     locator_page_username = "id=user_name"
     locator_page_password = "id=password"
@@ -24,7 +20,7 @@ class LoginPage(BasePage):
         """
         访问登录页面
         """
-        self.page.goto("/user/login", timeout=timeout)
+        self.page.goto(GLOBAL_VARS["url"] + "/user/login", timeout=timeout)
         self.wait_for_load_state()
         return self
 
@@ -56,16 +52,11 @@ class LoginPage(BasePage):
 
         :return: HomePage 实例
         """
-        # 局部导入，避免与 home_page 循环依赖
         from pages.home_page import HomePage
 
-        (self
-         .input_username_on_page(login)
-         .input_password_on_page(password)
-         .submit_login_on_page())
-        # 提交后：成功跳走 /user/login，失败仍停留。
-        # 使用 Playwright 自动等待替代 wait_for_timeout：URL 离开登录页即返回；若
-        # 仍停留（失败路径）超时即可，调用方会再用 assert_url_contains 做最终断言。
+        self.input_username_on_page(login) # 输入用户名
+        self.input_password_on_page(password) # 输入密码
+        self.submit_login_on_page() # 提交表单
         try:
             self.page.wait_for_url(lambda url: "/user/login" not in url, timeout=5000)
         except PlaywrightTimeoutError:

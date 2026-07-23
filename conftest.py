@@ -68,7 +68,7 @@ def pytest_configure(config):
     from dotenv import load_dotenv
     _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', '.env')
     load_dotenv(_env_path)
-    config.option.base_url = GLOBAL_VARS.get("url")
+    config.option.base_url = GLOBAL_VARS.get("host")
 
 
 def pytest_runtest_call(item):  # noqa
@@ -130,6 +130,8 @@ def pytest_terminal_summary(terminalreporter, config):
                   f"{session_start_time.hour}:{session_start_time.minute}:{session_start_time.second}"
 
     test_info = f"各位同事, 大家好:\n" \
+                f"运行环境: {GLOBAL_VARS.get('env_url')}\n" \
+                f"测试人员: {GLOBAL_VARS.get('tester')}\n" \
                 f"自动化用例于 {_START_TIME}- 开始运行，运行时长：{_DURATION:.2f} s， 目前已执行完成。\n" \
                 f"==================================================\n" \
                 f"#### 测试执行结果如下:\n" \

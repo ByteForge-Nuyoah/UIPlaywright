@@ -7,6 +7,7 @@
 
 import allure
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from config.global_vars import GLOBAL_VARS
 from utils.base_utils.base_page import BasePage
 
 
@@ -31,7 +32,7 @@ class LoginPage(BasePage):
         """
         访问登录页面（base_url 由项目环境配置注入：test -> workspace-dev.spreadwin.cn）
         """
-        self.page.goto("/login", timeout=timeout)
+        self.page.goto(GLOBAL_VARS["url"] + "/login", timeout=timeout)
         self.wait_for_load_state()
         return self
 

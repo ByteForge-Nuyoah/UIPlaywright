@@ -330,7 +330,7 @@ def api_session_setup(browser: Browser):
                 global_var[payload_key] = GLOBAL_VARS.get(source_key, "")
             global_var.update(login_api_cfg.get("extra_vars", {}))
             api_browser_context = browser.new_context(
-                base_url=GLOBAL_VARS.get("host") or GLOBAL_VARS.get("url")
+                base_url=GLOBAL_VARS.get("host")
             )
             try:
                 result = RequestControl(

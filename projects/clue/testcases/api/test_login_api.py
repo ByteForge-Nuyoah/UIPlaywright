@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : test_login_api.py
-# @Software: PyCharm
 # @Desc    : Clue 登录接口用例
 
 import os

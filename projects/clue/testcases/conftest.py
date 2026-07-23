@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : conftest.py
-# @Software: PyCharm
 # @Desc    : 项目级 fixture：UI 预登录 + storage_state 注入
 
 import os
@@ -19,17 +17,9 @@ from config.config_path import AUTH_DIR, BASE_DIR
 from utils.base_utils.request_control import RequestControl
 from pages.login_page import LoginPage
 
-# 项目名：从所在路径 projects/<name>/testcases/conftest.py 自动推导，
-# 使本 conftest 可零改动复用到任意项目（登录态文件名等均按项目名隔离）
 PROJECT_NAME = os.path.basename(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# 登录态文件路径：.auth/<project>_state.json
 AUTH_STATE_PATH = os.path.join(AUTH_DIR, f"{PROJECT_NAME}_state.json")
-
-# 接口池目录（项目根 interfaces/，各项目接口按文件名隔离，供本项目及脚手架新增项目共用）
 INTERFACE_DIR = os.path.join(BASE_DIR, "interfaces")
-
-# 登录态默认有效期（兜底，当无法从 JWT 解析 exp 时使用），单位秒
 STORAGE_STATE_TTL = 3600
 
 
@@ -132,13 +122,6 @@ def storage_state_path(request, browser: Browser):
     会话级前置：在一个独立的浏览器 context 里跑一次完整 UI 登录，
     把登录态以 storage_state（cookies + localStorage）形式落盘到 .auth/<project>_state.json，
     返回该路径供 `browser_context_args` 注入。
-    设计要点：
-    1. 整个会话只执行一次，所有用例共享生成的 storage_state 文件。
-    2. 创建独立 context，不复用 `browser_context_args`，避免循环依赖
-       （browser_context_args 反过来要依赖本 fixture）。
-    3. 失败时返回 None，浏览器以未登录态启动，让具体业务断言报真实错误。
-    4. 按需触发：当 session 内所有用例都显式 `@pytest.mark.browser_context_args(storage_state=None)`
-       —— 比如只跑 `-m login`，登录用例本身要测登录流程，预登录就是浪费 —— 直接跳过预登录。
     """
     # 按需触发：检测 session 中是否还有用例需要预登录的 storage_state
     if not _session_needs_storage_state(request.session):
@@ -260,20 +243,6 @@ def user_page(new_context):
 def api_session_setup(browser: Browser):
     """
     会话级 API 数据准备 fixture。
-
-    用 RequestControl 调接口池登录接口完成 API 登录，为后续 API 造数据/状态清理提供已鉴权的
-    APIRequestContext 与响应数据。比 UI 登录快，不依赖浏览器渲染。
-
-    登录接口的 file / key / 变量映射 / 额外参数统一由 project_settings.py 的
-    ENV_VARS["common"]["login_api"] 配置（经 run.py 写入 GLOBAL_VARS），本 fixture 对所有项目通用：
-        login_api = {
-            "file": "<name>_login.yml",          # 相对项目根 interfaces/ 目录
-            "key": "<name>_login",                # yml 中的 id
-            "var_map": {"<payload_key>": "<GLOBAL_VARS_key>"},  # 凭据等字段映射
-            "extra_vars": {"<k>": "<v>"},         # 接口需要的固定参数
-        }
-    未配置 login_api、文件不存在或 admin 凭据缺失时自动跳过，不影响 UI 用例。
-
     :return: API 登录的响应数据（dict）；失败/跳过返回 None
     """
     result = None
@@ -296,7 +265,7 @@ def api_session_setup(browser: Browser):
                 global_var[payload_key] = GLOBAL_VARS.get(source_key, "")
             global_var.update(login_api_cfg.get("extra_vars", {}))
             api_browser_context = browser.new_context(
-                base_url=GLOBAL_VARS.get("host") or GLOBAL_VARS.get("url")
+                base_url=GLOBAL_VARS.get("host")
             )
             try:
                 result = RequestControl(

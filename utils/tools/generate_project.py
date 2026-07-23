@@ -118,6 +118,7 @@ LOGIN_PAGE_TPL = '''# -*- coding: utf-8 -*-
 
 import allure
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from config.global_vars import GLOBAL_VARS
 from utils.base_utils.base_page import BasePage
 
 
@@ -136,7 +137,7 @@ class LoginPage(BasePage):
         访问登录页面
         # TODO: 确认登录页路径，可能是 /login 或根路径重定向到登录页
         """
-        self.page.goto("/login", timeout=timeout)
+        self.page.goto(GLOBAL_VARS["url"] + "/login", timeout=timeout)
         self.wait_for_load_state()
         return self
 

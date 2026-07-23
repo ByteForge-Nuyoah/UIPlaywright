@@ -1,4 +1,3 @@
-# 场景：数据概览页交互
 data_overview_page:
   - title: "欢迎页页面"
     month_text: "1月"
@@ -7,6 +6,7 @@ data_overview_page:
     company_title: "钉钉集团"
     company_index: 1
     run: true
+
   # - title: "欢迎页交互_点击第一个公司卡片"
   #   month_text: "1月"
   #   range_label: "一年"

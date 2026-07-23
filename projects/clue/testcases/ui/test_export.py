@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : test_export.py
-# @Software: PyCharm
 # @Desc    : 导出文件
 
 import os
@@ -11,7 +9,7 @@ from loguru import logger
 from playwright.sync_api import Page
 from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
-from pages.export.export_page import ExportPage
+from pages.export_page import ExportPage
 
 
 
