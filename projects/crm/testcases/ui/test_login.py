@@ -22,7 +22,7 @@ from utils.files_utils.yaml_handle import YamlHandle
 class TestLogin:
     """CRM 登录"""
     # 动态获取 yaml 数据文件路径
-    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "login_data.yaml")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "login_data.yaml")
     cases = YamlHandle(data_path).read_yaml
 
     @pytest.fixture(autouse=True)
@@ -37,12 +37,18 @@ class TestLogin:
     @pytest.mark.parametrize("case", cases["user_with_phone_page"], ids=lambda x: x["title"])
     def test_login_user(self, case):
         """
-        网页登录：输入用户名密码并提交。
-        TODO: 定位器（login_page.py）与登录后跳转路径填好后，按 CRM 实际情况补充成功/失败断言
-              （可参照 projects/clue/testcases/test_login.py 的写法）
+        网页登录：输入用户名密码并提交，按用例标题分支断言登录成功/失败。
+        - 标题含「成功」：URL 离开 /login（登录成功跳转）
+        - 标题含「失败」：仍停留在 /login
         """
         login = case.get("login")
         password = case.get("password")
+        title = case.get("title", "")
         self.login_page.login_on_page_flow(login=login, password=password)
-        # TODO: 成功用例断言跳转到首页；失败用例断言仍停留在登录页
-        assert self.login_page.page is not None
+
+        if "成功" in title:
+            # 断言：登录成功，URL 离开登录页
+            self.login_page.page.wait_for_url(lambda url: "/login" not in url, timeout=10000)
+        else:
+            # 断言：登录失败，仍停留在 /login
+            assert "/login" in self.login_page.page.url, "登录失败时应停留在登录页"

@@ -19,7 +19,7 @@ class TestCreateAccount:
     """创建账号"""
 
     # 动态获取yaml数据文件路径
-    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "account_data.yaml")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "account_data.yaml")
     cases = YamlHandle(data_path).read_yaml
 
     @pytest.fixture(autouse=True)

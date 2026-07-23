@@ -18,7 +18,7 @@ from utils.files_utils.yaml_handle import YamlHandle
 class TestVehicleList:
     """车辆管理/车辆列表"""
 
-    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "vehicle_list.yaml")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "vehicle_list.yaml")
     cases = YamlHandle(data_path).read_yaml
 
     @pytest.fixture(autouse=True)

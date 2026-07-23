@@ -19,7 +19,7 @@ class TestDataPage:
     """欢迎页/数据概览"""
 
     # 动态获取yaml数据文件路径
-    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "data_page.yaml")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "data_page.yaml")
     cases = YamlHandle(data_path).read_yaml
 
     @pytest.fixture(autouse=True)

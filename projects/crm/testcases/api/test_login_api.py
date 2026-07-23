@@ -9,10 +9,10 @@ import os
 import pytest
 from playwright.sync_api import Playwright
 from config.global_vars import GLOBAL_VARS
+from config.config_path import BASE_DIR
 from utils.base_utils.request_control import RequestControl
 
-PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INTERFACE_DIR = os.path.join(PROJECT_DIR, "interfaces")
+INTERFACE_DIR = os.path.join(BASE_DIR, "interfaces")
 
 
 @pytest.mark.api

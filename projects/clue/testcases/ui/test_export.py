@@ -19,7 +19,7 @@ from pages.export.export_page import ExportPage
 class TestExportRecord:
     """Export"""
 
-    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "export.yaml")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "export.yaml")
     cases = YamlHandle(data_path).read_yaml
 
     @pytest.fixture(autouse=True)
