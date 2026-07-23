@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : yaml_handle.py
-# @Software: PyCharm
 # @Desc: 从日志文件中提取响应数据
 
 import yaml  # pip install pyyaml
