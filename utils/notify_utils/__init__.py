@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : __init__.py
-# @Software: PyCharm
 # @Desc: notify_utils 包公共 API 导出
 
 from utils.notify_utils.base_bot import BaseNotifyBot
