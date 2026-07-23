@@ -1,4 +1,4 @@
-# 场景：CRM 登录
+# 场景：CRM 登录（供 test_login.py 的 login_on_page_flow 使用）
 user_with_phone_page:
   - title: "网页登录，正确用户名和密码登录成功"
     login: "${admin_user_name}"
@@ -9,3 +9,12 @@ user_with_phone_page:
   #   login: "${admin_user_name}"
   #   password: "wrong_password"
   #   run: true
+
+# 场景：CRM 登录完整录制流程（登录后进入「我的账号」），供 login_recorded_flow 使用
+# 凭据沿用占位符，由项目环境配置(CRM_ADMIN_USER/CRM_ADMIN_PASSWORD)经 env 注入，不保留明文
+login_recorded_page:
+  - title: "CRM 登录-正确账号密码登录并进入我的账号"
+    run: true
+    account: "${admin_user_name}"
+    password: "${admin_user_password}"
+    account_key: "Enter"
