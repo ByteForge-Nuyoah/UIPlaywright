@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : models.py
-# @Software: PyCharm
 # @Desc: 全局变量
 
 from enum import Enum, unique  # python 3.x版本才能使用
