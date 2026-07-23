@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : data_page.py
-# @Software: PyCharm
 # @Desc    : 数据概览/欢迎页交互
 
 import allure
+from config.global_vars import GLOBAL_VARS
 from utils.base_utils.base_page import BasePage
 
 
 class DataPage(BasePage):
-    # 区域/筛选
     locator_week = "text=本周"
     locator_month = "text=本月"
     locator_install_count = "text=安装数"
     locator_date_picker_input = ".ant-picker.ant-picker-borderless > .ant-picker-input"
     locator_button_year = "role=button[name=\"一年\"]"
     locator_button_all = "role=button[name=\"所有\"]"
-    # 模块/标签
     locator_section_clue_follow = "text=线索跟进情况"
     locator_tab_accident_clue = "role=tab[name=\"事故线索\"]"
 
@@ -26,7 +23,7 @@ class DataPage(BasePage):
         """
         访问欢迎页
         """
-        self.page.goto("/welcome")
+        self.page.goto(GLOBAL_VARS["url"] + "/welcome")
         self.wait_for_load_state()
         return self
 
@@ -96,20 +93,18 @@ class DataPage(BasePage):
         company_index: int = 1
     ):
         """
-        欢迎页交互完整流程；仍停留在欢迎页，故返回 self。
+        欢迎页交互完整流程
         """
-        (self
-         .click_week(index=0)
-         .click_month(index=0)
-         .click_install_count()
-         .click_week(index=1)
-         .click_month(index=2)
-         .select_month(month_text=month_text)
-         .click_range_button(range_label=range_label)
-         .click_scope_button(scope_label=scope_label)
-         .enter_clue_follow_section()
-         .switch_to_accident_clue_tab()
-         .click_company_by_title(title=company_title, index=company_index))
-        # 智能等待，确认未跳离欢迎页
-        self.assert_url_contains("/welcome")
+        self.click_week(index=0) # 本周
+        self.click_month(index=0) # 本月
+        self.click_install_count() # 安装数
+        self.click_week(index=1) # 本周
+        self.click_month(index=2) # 本月
+        self.select_month(month_text=month_text) # 选择月份
+        self.click_range_button(range_label=range_label) # 点击范围按钮
+        self.click_scope_button(scope_label=scope_label) # 点击范围下拉
+        self.enter_clue_follow_section() # 进入模块：线索跟进情况
+        self.switch_to_accident_clue_tab() # 切换标签：事故线索
+        self.click_company_by_title(title=company_title, index=company_index) # 点击公司卡片
+        self.assert_url_contains("/welcome") # 智能等待，确认未跳离欢迎页
         return self

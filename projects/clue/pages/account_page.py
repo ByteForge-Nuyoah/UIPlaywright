@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : account_page.py
-# @Software: PyCharm
 # @Desc    : 账号管理页
 
 import allure
@@ -21,7 +19,6 @@ class AccountPage(BasePage):
     locator_radio_status = "xpath=//*[@id='status']/label[1]/span[1]/input"
     locator_radio_allow_export = "xpath=//*[@id='allow_export']/label[2]/span[1]/input"
     locator_radio_allow_export_sensitive = "xpath=//*[@id='allow_export_sensitive']/label[2]"
-    # ant-design Modal 确定按钮（基于 ant-modal 模式，若弹窗非标准结构需 DOM 调整）
     locator_btn_confirm = "xpath=//div[contains(@class,'ant-modal')]//div[contains(@class,'ant-modal-footer')]//button[contains(@class,'ant-btn-primary')]"
 
     @allure.step("点击【新建账号】按钮")
@@ -103,20 +100,15 @@ class AccountPage(BasePage):
 
     @allure.step("创建账号流程")
     def create_account_flow(self, phone, name, user_name, password):
-        """
-        完整创建账号流程；仍停留在账号管理页，故返回 self。
-        导航到账号管理页由 CommonPage.goto_account_management 负责，此处只做建账号操作。
-        """
-        (self
-         .click_btn_new_account()
-         .select_account_type()
-         .select_role()
-         .input_phone(phone)
-         .input_name(name)
-         .input_user_name(user_name)
-         .input_password(password)
-         .select_status()
-         .select_allow_export()
-         .select_allow_export_sensitive()
-         .click_confirm())
+        self.click_btn_new_account() # 点击【新建账号】按钮
+        self.select_account_type() # 选择账号类型
+        self.select_role()
+        self.input_phone(phone) # 输入手机号
+        self.input_name(name) # 输入姓名
+        self.input_user_name(user_name) # 输入账号名称
+        self.input_password(password) # 输入密码
+        self.select_status() # 选择账号状态
+        self.select_allow_export() # 选择导出状态
+        self.select_allow_export_sensitive() # 选择导出敏感信息状态
+        self.click_confirm() # 点击【确定】按钮
         return self
