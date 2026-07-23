@@ -1,0 +1,8 @@
+# 场景：CRM 我的账号-更新基本信息
+# avatar_path 建议改为项目内绝对路径（如 files/crm/1.jpeg），BasePage.upload_file 会校验文件存在
+my_account_cases:
+  - title: "我的账号-更新基本信息"
+    run: true
+    real_name: "超级管理员 1"
+    email: "workspace@qq.com"
+    avatar_path: "files/crm/1.jpeg"
