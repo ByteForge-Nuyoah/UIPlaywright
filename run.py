@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : run.py
-# @Software: PyCharm
 # @Desc: 框架主入口
 
 """
@@ -30,24 +28,19 @@ import time
 import pytest
 from loguru import logger
 from dotenv import load_dotenv
-
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', '.env'))
-from config.settings import LOG_INFO, RunConfig, BASE_DIR, REPORT_DIR, TRACING_DIR, ALLURE_RESULTS_DIR, \
+from config.settings import LOG_INFO, RunConfig
+from config.config_path import BASE_DIR, REPORT_DIR, TRACING_DIR, ALLURE_RESULTS_DIR, \
     ALLURE_HTML_DIR, AUTH_DIR, LIB_DIR
 from config.global_vars import GLOBAL_VARS
 from utils.report_utils.send_result_handle import send_result
 from utils.logger_utils.loguru_log import capture_logs
 from utils.report_utils.allure_handle import generate_allure_report
 from utils.report_utils.platform_handle import PlatformHandle
-
 ENV_VARS = {}
 
 
 def _load_project_config(project_name):
-    """
-    动态加载项目 project_settings.py，将 ENV_VARS 写入模块全局，返回 (test_path, recordings_path)。
-    项目路径不存在时返回 (None, None)。
-    """
     global ENV_VARS
     project_test_path = ""
     project_recordings_path = ""
@@ -57,11 +50,11 @@ def _load_project_config(project_name):
     if not os.path.exists(project_path):
         logger.error(f"Project path not found: {project_path}")
         return None, None
-    # 将项目路径插入 sys.path，使其下模块（如 pages）可直接 import
     sys.path.insert(0, project_path)
     logger.info(f"Loaded project path: {project_path}")
     project_test_path = os.path.join(project_path, "testcases")
-    project_recordings_path = os.path.join(project_path, "playwrightScript")
+    recordings_dir = os.path.join(project_path, "recordings")
+    project_recordings_path = recordings_dir if os.path.isdir(recordings_dir) else ""
     settings_path = os.path.join(project_path, "project_settings.py")
     if os.path.exists(settings_path):
         spec = importlib.util.spec_from_file_location("project_settings", settings_path)
@@ -88,10 +81,6 @@ def _apply_run_config(kwargs):
 
 
 def _resolve_env(env_key, env_vars):
-    """
-    校验并解析运行环境，将 common + 环境配置注入 GLOBAL_VARS。
-    返回 env_key；校验失败返回 None。
-    """
     valid_envs = [k for k in env_vars.keys() if k != "common"]
     if not env_key:
         env_key = valid_envs[0] if valid_envs else None
@@ -102,7 +91,6 @@ def _resolve_env(env_key, env_vars):
     if not env_vars[env_key].get("url"):
         logger.error(f"环境 '{env_key}' 的 url 未配置，请检查 project_settings.py")
         return None
-    # env 存环境名（test/prod），env_url 存环境 URL；通知模板 ${env} 显示环境名
     env_vars["common"]["env"] = env_key
     env_vars["common"]["env_url"] = env_vars[env_key]["url"]
     GLOBAL_VARS.update(env_vars["common"])
@@ -131,7 +119,7 @@ def _build_pytest_args(kwargs, project_test_path, project_recordings_path):
         arg_list.extend(["--video", RunConfig.video])
     if RunConfig.mode == "headed":
         arg_list.append("--headed")
-    # 浏览器支持单字符串或列表（多内核并跑），统一展开为多组 ["--browser", name]
+
     browsers = RunConfig.browser if isinstance(RunConfig.browser, list) else [RunConfig.browser]
     for b in browsers:
         arg_list.extend(["--browser", str(b).lower()])
@@ -168,14 +156,12 @@ def _post_run_report(kwargs, env_vars):
         allure_bin = PlatformHandle().allure
         proc = subprocess.Popen([allure_bin, "open", ALLURE_HTML_DIR],
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        logger.info("测试报告已打开，将在20秒后自动关闭服务。")
         try:
             time.sleep(20)
         except KeyboardInterrupt:
             pass
         finally:
             proc.terminate()
-            logger.info("测试报告服务已关闭。")
     else:
         logger.info("定时任务模式，跳过自动打开测试报告。")
     send_result(report_info=env_vars["common"], report_path=report_path, attachment_path=attachment_path)
@@ -186,7 +172,7 @@ def run(**kwargs):
     框架统一入口函数（编排：加载配置 -> 应用参数 -> 清理 -> 解析环境 -> 执行 pytest -> 生成报告）。
     """
     capture_logs(log_info=LOG_INFO)
-    logger.info("""\n\n ===============UI自动化测试开始了==================""")
+    logger.info("""===============UI自动化测试开始了==================""")
     logger.debug(f"run方法的入参：{kwargs}")
 
     env_key = kwargs.get("env", "") or None
@@ -204,14 +190,12 @@ def run(**kwargs):
     if os.path.isdir(TRACING_DIR):
         shutil.rmtree(TRACING_DIR, ignore_errors=True)
     os.makedirs(TRACING_DIR, exist_ok=True)
-    logger.info(f"已清空测试产物目录：{TRACING_DIR}")
     if kwargs.get("fresh_login"):
         if os.path.isdir(AUTH_DIR):
             shutil.rmtree(AUTH_DIR, ignore_errors=True)
         os.makedirs(AUTH_DIR, exist_ok=True)
-        logger.info(f"已清空登录态目录（-fresh-login）：{AUTH_DIR}")
+        # logger.info(f"已清空登录态目录（-fresh-login）：{AUTH_DIR}")
 
-    # 4. 校验 ENV_VARS + 解析环境 + 注入 GLOBAL_VARS
     if not ENV_VARS:
         logger.error("ENV_VARS is empty. Please check project settings.")
         return
@@ -219,12 +203,10 @@ def run(**kwargs):
     if env_key is None:
         return
 
-    # 5. 组装并执行 pytest
     arg_list = _build_pytest_args(kwargs, project_test_path, project_recordings_path)
     logger.debug(f"pytest运行的参数：{arg_list}")
     pytest.main(args=arg_list)
 
-    # 6. 生成报告 + 通知
     if kwargs.get("report") == "yes":
         _post_run_report(kwargs, ENV_VARS)
 

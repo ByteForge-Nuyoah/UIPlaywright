@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : http_server.py
-# @Software: PyCharm
 # @Desc: 封装的HTTP服务
 
 import os

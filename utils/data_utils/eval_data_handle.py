@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : eval_data_handle.py
-# @Software: PyCharm
 # @Desc:
 
 import ast

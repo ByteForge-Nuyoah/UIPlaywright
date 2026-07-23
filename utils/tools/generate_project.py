@@ -7,15 +7,15 @@
 
 """
 按项目名在 projects/<name>/ 下生成登录骨架，包含：
-  project_settings.py / data/login_data.yaml / interfaces/<name>_login.yml
-  pages/login_page.py / testcases/conftest.py / testcases/test_login.py / testcases/test_login_api.py
+  project_settings.py / data/login_data.yaml / interfaces/<name>_login.yml（项目根，各项目按文件名隔离）
+  pages/login_page.py / testcases/conftest.py / testcases/ui/test_login.py / testcases/api/test_login_api.py
 
 用法：
   python utils/tools/generate_project.py <项目名>
 
 生成后还需手动：
   1. 填 pages/login_page.py 的定位器与登录页路径
-  2. 填 interfaces/<name>_login.yml 的 url / payload / 断言
+  2. 填 项目根 interfaces/<name>_login.yml 的 url / payload / 断言
   3. 在 config/env/.env 配置 <NAME>_ADMIN_USER / <NAME>_ADMIN_PASSWORD
   4. 跑通：python run.py -project <项目名> -env test -m login
 """
@@ -51,7 +51,7 @@ ENV_VARS = {
         "department": "成都研发后台",
         "env": "test",
         # API 登录接口配置（供 testcases/conftest.py 的 api_session_setup 使用）；
-        # file 相对本项目 interfaces/ 目录，var_map 把 GLOBAL_VARS 字段映射成接口 payload 变量名
+        # file 相对项目根 interfaces/ 目录，var_map 把 GLOBAL_VARS 字段映射成接口 payload 变量名
         "login_api": {
             "file": "__NAME___login.yml",
             "key": "__NAME___login",
@@ -136,7 +136,8 @@ class LoginPage(BasePage):
         访问登录页面
         # TODO: 确认登录页路径，可能是 /login 或根路径重定向到登录页
         """
-        self.visit("/login", timeout=timeout)
+        self.page.goto("/login", timeout=timeout)
+        self.wait_for_load_state()
         return self
 
     @allure.step("网页登录：输入用户名：{login}")
@@ -198,7 +199,7 @@ from utils.files_utils.yaml_handle import YamlHandle
 class TestLogin:
     """__NAME__ 登录"""
     # 动态获取 yaml 数据文件路径
-    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "login_data.yaml")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "login_data.yaml")
     cases = YamlHandle(data_path).read_yaml
 
     @pytest.fixture(autouse=True)
@@ -235,10 +236,10 @@ import os
 import pytest
 from playwright.sync_api import Playwright
 from config.global_vars import GLOBAL_VARS
+from config.config_path import BASE_DIR
 from utils.base_utils.request_control import RequestControl
 
-PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INTERFACE_DIR = os.path.join(PROJECT_DIR, "interfaces")
+INTERFACE_DIR = os.path.join(BASE_DIR, "interfaces")
 
 
 @pytest.mark.api
@@ -304,7 +305,7 @@ def print_next_steps(name):
 
 接下来手动完成：
   1. projects/{name}/pages/login_page.py      填定位器 + 登录页路径（TODO 处）
-  2. projects/{name}/interfaces/{name}_login.yml  填 url / payload / 断言（TODO 处）
+  2. interfaces/{name}_login.yml  填 url / payload / 断言（TODO 处）
   3. config/env/.env                           追加 {env_user}=xxx  {env_pwd}=xxx
   4. （可选）pytest.ini                         为业务用例补充 markers
   5. 跑通登录骨架：
@@ -330,30 +331,38 @@ def main():
         print(f"参考 conftest 不存在: {REFERENCE_CONFTEST}（脚手架依赖 clue 的通用 conftest）")
         sys.exit(1)
 
-    # 1. 建目录
-    for sub in ["data", "interfaces", "pages", "testcases"]:
+    # 1. 建目录（interfaces 在项目根，不在项目目录下；testcases 下分 api/ui 子目录）
+    for sub in ["data", "pages", "testcases", "testcases/api", "testcases/ui"]:
         os.makedirs(os.path.join(project_dir, sub), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, "interfaces"), exist_ok=True)
 
     # 2. 拷贝通用项目级 conftest（已去硬编码，零改动复用）
     shutil.copyfile(REFERENCE_CONFTEST, os.path.join(project_dir, "testcases", "conftest.py"))
     print(f"生成: projects/{name}/testcases/conftest.py  (拷贝自 clue)")
 
-    # 3. 渲染模板文件
+    # 3. 渲染模板文件（写到项目目录）
     writes = [
         ("project_settings.py", render(PROJECT_SETTINGS_TPL, name)),
-        (f"interfaces/{name}_login.yml", render(LOGIN_YML_TPL, name)),
         ("pages/login_page.py", render(LOGIN_PAGE_TPL, name)),
-        ("testcases/test_login.py", render(TEST_LOGIN_TPL, name)),
-        ("testcases/test_login_api.py", render(TEST_LOGIN_API_TPL, name)),
+        ("testcases/ui/test_login.py", render(TEST_LOGIN_TPL, name)),
+        ("testcases/api/test_login_api.py", render(TEST_LOGIN_API_TPL, name)),
         ("data/login_data.yaml", render(LOGIN_DATA_TPL, name)),
         ("pages/__init__.py", render(INIT_TPL, name)),
         ("testcases/__init__.py", render(INIT_TPL, name)),
+        ("testcases/api/__init__.py", render(INIT_TPL, name)),
+        ("testcases/ui/__init__.py", render(INIT_TPL, name)),
     ]
     for rel, content in writes:
         path = os.path.join(project_dir, rel)
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
         print(f"生成: projects/{name}/{rel}")
+
+    # 4. 接口定义写到项目根 interfaces/<name>_login.yml（各项目按文件名隔离）
+    interface_path = os.path.join(BASE_DIR, "interfaces", f"{name}_login.yml")
+    with open(interface_path, "w", encoding="utf-8") as f:
+        f.write(render(LOGIN_YML_TPL, name))
+    print(f"生成: interfaces/{name}_login.yml")
 
     print_next_steps(name)
 

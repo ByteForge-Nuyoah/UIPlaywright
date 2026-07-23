@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : time_handle.py
-# @Software: PyCharm
 # @Desc: 时间处理
 
 import time

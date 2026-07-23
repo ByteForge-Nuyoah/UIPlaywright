@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : yagmail_bot.py
-# @Software: PyCharm
 # @Desc: 通过第三方模块yagmail发送邮件
 
 import os
@@ -32,13 +30,11 @@ class YagEmailServe:
         :return:
         """
         try:
-            logger.info("\n======================================================\n" \
-                         "-------------Start：发送邮件--------------------\n"
+            logger.info("\n================ 发送邮件 =====================\n" \
                          f"用户名: {self.user}\n" \
                          "密码: <redacted>\n" \
                          f"host: {self.host}\n" \
-                         f"邮件内容: {info}\n" \
-                         "=====================================================")
+                         f"邮件内容: {info}\n" )
             yag = yagmail.SMTP(
                 user=self.user,
                 password=self.password,
@@ -52,16 +48,12 @@ class YagEmailServe:
                     attachments=info['attachments'])
             else:
                 logger.warning(f"\n请检查邮件内容info是否存在附件，info中应该存在键值：attachments\n"
-                               f"请检查附件地址是否正确 --> info['attachments'] 应该是一个有效的路径\n"
                                f"当前仅发送邮件内容，不发送附件~")
                 yag.send(
                     to=info['to'],
                     subject=info['subject'],
                     contents=info['contents'])
             yag.close()
-            logger.info("\n======================================================\n" \
-                        "-------------End：发送邮件--------------------\n"
-                        "发送邮件成功\n" \
-                        "=====================================================")
+            logger.info("\n============发送邮件成功================\n")
         except Exception as e:
             logger.error(f"发送邮件失败，错误信息: {e}")

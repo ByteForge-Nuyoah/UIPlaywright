@@ -15,11 +15,10 @@
      appVersion: "${appVersion}"
    assert_response:
      status_code: 200
-     # TODO: 按实际返回补充 code / 字段断言，例如：
-     # assertCode:
-     #   message: 断言接口返回码为0
-     #   expect_value: 0
-     #   assert_type: ==
-     #   type_jsonpath: $.code
+     assertName:
+       message: 断言接口返回name
+       expect_value: "超级管理员 1"
+       assert_type: ==
+       type_jsonpath: $.data.user.name
    assert_sql:
    extract:

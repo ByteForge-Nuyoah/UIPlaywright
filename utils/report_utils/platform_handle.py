@@ -8,7 +8,7 @@
 import os.path
 import platform
 import shutil
-from config.settings import LIB_DIR
+from config.config_path import LIB_DIR
 
 
 class PlatformHandle:

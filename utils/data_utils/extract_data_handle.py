@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : extract_data_handle.py
-# @Software: PyCharm
 # @Desc: 提取数据的一些方法
 
 import re
@@ -90,11 +88,6 @@ def response_extract(response: APIResponse, expr: str = '.'):
 
 def extract_by_type(type_key, pairs, *, json_source=None, text_source=None, response=None):
     """
-    按单个提取类型 type_key，对 pairs={提取名: 表达式} 执行提取，返回 {提取名: 提取值}。
-
-    统一 type_jsonpath / type_re / type_response 三种提取方式的分发逻辑，
-    供 request_control.after_request 等调用方复用，消除各数据来源分支内重复的 type 判断。
-
     :param type_key: 提取类型，type_jsonpath / type_re / type_response（大小写不敏感）
     :param pairs: {提取名: 表达式} 字典
     :param json_source: type_jsonpath 的数据源（dict/list）

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : conftest.py
-# @Software: PyCharm
 # @Desc: pytest 配置文件
 
 import os
@@ -13,13 +11,14 @@ from loguru import logger
 from datetime import datetime
 from config.global_vars import GLOBAL_VARS
 from utils.data_utils.data_handle import data_handle
-from config.settings import resolve_window_size, REPORT_DIR
+from config.settings import resolve_window_size
+from config.config_path import REPORT_DIR
 
 # 本地插件注册
 pytest_plugins = [
     'plugins.allure_playwright_attach',  # 失败用例的截图/视频/trace 自动挂到 Allure
     'plugins.allure_fixture_filter',     # 过滤 Allure Set up/Tear down 区域的内部噪声 fixture
-]  # noqa
+]
 
 
 # ------------------------------------- START: pytest-playwright fixture 覆写---------------------------------------#
@@ -29,12 +28,8 @@ def browser_context_args(browser_context_args):
     """
     pytest-playwright 内置 fixture 覆写
     作用域：session (整个测试会话期间只执行一次)
-    功能：
-    1. headed 模式下使用大视口，避免浏览器最大化但页面仍按默认小视口渲染
-    2. headless/CI 模式下使用固定分辨率，保证结果稳定
     """
     window_size = resolve_window_size()
-
     return {
         **browser_context_args,
         "viewport": window_size,
@@ -48,7 +43,6 @@ def browser_type_launch_args(browser_type_launch_args):
     """
     pytest-playwright 内置 fixture 覆写
     作用域：session
-    功能：配置浏览器启动参数，如是否最大化窗口、是否开启开发者工具等
     """
     window_size = resolve_window_size()
     args = list(browser_type_launch_args.get("args", []))
@@ -70,9 +64,6 @@ def browser_type_launch_args(browser_type_launch_args):
 def pytest_configure(config):
     """
     pytest 钩子函数：初始化配置
-    功能：
-    1. 加载 .env（直跑 pytest 不经 run.py 时也能读到环境变量）
-    2. 将全局变量中的 URL 设置为 pytest 的 base_url
     """
     from dotenv import load_dotenv
     _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', '.env')
@@ -83,8 +74,6 @@ def pytest_configure(config):
 def pytest_runtest_call(item):  # noqa
     """
     pytest 钩子函数：测试用例执行时调用
-    功能：动态读取测试类的文档字符串 (docstring)，并将其设置为 Allure 报告的 Feature 名称
-    这使得报告结构更清晰，直接复用代码注释
     """
     # 动态添加测试类的 allure.feature()， 注意测试类一定要写文档注释，否则这里会显示为空
     if item.parent._obj.__doc__:  # noqa
@@ -94,12 +83,7 @@ def pytest_runtest_call(item):  # noqa
 def pytest_collection_modifyitems(config, items):
     """
     pytest 钩子函数：用例收集完成后调用
-    功能：
-    1. 根据用例数据中的 'run' 字段决定是否跳过该用例
-    2. 对用例数据进行预处理 (变量替换)，实现数据驱动中的动态值注入
-    
-    参数：
-    - items: 收集到的所有测试用例对象列表
+    参数：items: 收集到的所有测试用例对象列表
     """
     for item in items:
         # 注意这里的"case"需要与@pytest.mark.parametrize("case", cases)中传递的保持一致
@@ -115,10 +99,6 @@ def pytest_collection_modifyitems(config, items):
 def pytest_terminal_summary(terminalreporter, config):
     """
     pytest 钩子函数：测试会话结束后的摘要统计
-    功能：
-    1. 统计通过、失败、跳过、重跑的用例数量
-    2. 计算成功率
-    3. 将统计结果输出到日志和文件 (test_result.txt)，用于后续通知发送
     """
     _RERUN = len([i for i in terminalreporter.stats.get('rerun', []) if i.when != 'teardown'])
     try:
@@ -151,8 +131,8 @@ def pytest_terminal_summary(terminalreporter, config):
 
     test_info = f"各位同事, 大家好:\n" \
                 f"自动化用例于 {_START_TIME}- 开始运行，运行时长：{_DURATION:.2f} s， 目前已执行完成。\n" \
-                f"--------------------------------------\n" \
-                f"#### 执行结果如下:\n" \
+                f"==================================================\n" \
+                f"#### 测试执行结果如下:\n" \
                 f"- 用例运行总数: {_TOTAL} 个\n" \
                 f"- 跳过用例个数（skipped）: {_SKIPPED} 个\n" \
                 f"- 实际执行用例总数: {_PASSED + _FAILED + _XPASSED + _XFAILED} 个\n" \
@@ -162,7 +142,6 @@ def pytest_terminal_summary(terminalreporter, config):
                 f"- 重跑的用例数(--reruns的值): {_RERUN} ({reruns_value}) 个\n"
     try:
         # 成功率 = 成功数 / 实际执行数（passed/failed/error/xpassed/xfailed，排除 skipped），
-        # 与 get_results_handle 的口径保持一致，不再把 skipped 计入成功。
         _executed = _PASSED + _FAILED + _ERROR + _XPASSED + _XFAILED
         _RATE = (_PASSED + _XPASSED) / _executed * 100 if _executed > 0 else 0.0
         test_result = f"- 用例成功率: {_RATE:.2f} %\n"

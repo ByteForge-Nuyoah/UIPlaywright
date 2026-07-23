@@ -24,7 +24,8 @@ class LoginPage(BasePage):
         """
         访问登录页面
         """
-        self.visit("/user/login", timeout=timeout)
+        self.page.goto("/user/login", timeout=timeout)
+        self.wait_for_load_state()
         return self
 
     @allure.step("网页登录：输入用户名：{login}")

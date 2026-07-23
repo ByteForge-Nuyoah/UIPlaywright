@@ -14,7 +14,8 @@ import traceback
 from loguru import logger
 from playwright.sync_api import Browser
 from config.global_vars import GLOBAL_VARS
-from config.settings import resolve_window_size, AUTH_DIR
+from config.settings import resolve_window_size
+from config.config_path import AUTH_DIR, BASE_DIR
 from utils.base_utils.request_control import RequestControl
 from pages.login_page import LoginPage
 
@@ -25,11 +26,8 @@ PROJECT_NAME = os.path.basename(os.path.dirname(os.path.dirname(os.path.abspath(
 # 登录态文件路径：.auth/<project>_state.json
 AUTH_STATE_PATH = os.path.join(AUTH_DIR, f"{PROJECT_NAME}_state.json")
 
-# 项目级接口池目录（projects/<name>/interfaces）
-PROJECT_INTERFACE_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "interfaces"
-)
+# 接口池目录（项目根 interfaces/，各项目接口按文件名隔离，供本项目及脚手架新增项目共用）
+INTERFACE_DIR = os.path.join(BASE_DIR, "interfaces")
 
 # 登录态默认有效期（兜底，当无法从 JWT 解析 exp 时使用），单位秒
 STORAGE_STATE_TTL = 3600
@@ -269,7 +267,7 @@ def api_session_setup(browser: Browser):
     登录接口的 file / key / 变量映射 / 额外参数统一由 project_settings.py 的
     ENV_VARS["common"]["login_api"] 配置（经 run.py 写入 GLOBAL_VARS），本 fixture 对所有项目通用：
         login_api = {
-            "file": "<name>_login.yml",          # 相对本项目 interfaces/ 目录
+            "file": "<name>_login.yml",          # 相对项目根 interfaces/ 目录
             "key": "<name>_login",                # yml 中的 id
             "var_map": {"<payload_key>": "<GLOBAL_VARS_key>"},  # 凭据等字段映射
             "extra_vars": {"<k>": "<v>"},         # 接口需要的固定参数
@@ -288,7 +286,7 @@ def api_session_setup(browser: Browser):
     elif not login_api_cfg:
         logger.info("未配置 login_api，跳过 API 会话准备")
     else:
-        login_api = os.path.join(PROJECT_INTERFACE_DIR, login_api_cfg["file"])
+        login_api = os.path.join(INTERFACE_DIR, login_api_cfg["file"])
         if not os.path.exists(login_api):
             logger.warning(f"接口定义不存在：{login_api}，跳过 API 会话准备")
         else:

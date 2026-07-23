@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : base_page.py
-# @Software: PyCharm
 # @Desc: Playwright UI自动化基础操作封装
 
 import os
@@ -11,7 +9,7 @@ import allure
 from loguru import logger
 from playwright.sync_api import Page
 from playwright.sync_api import expect
-from typing import Union, Pattern, Optional, Literal, AnyStr
+from typing import Union, Pattern, Optional, Literal
 
 class BasePage:
     """
@@ -23,50 +21,11 @@ class BasePage:
         self.context = self.page.context
         self.pages = self.context.pages
 
-    # --------------------------------- 导航 ---------------------------------#
-    """
-     • goto(url, **kwargs)：导航到指定的URL
-     • go_back()：后退到浏览器历史记录中的上一页
-     • go_forward()：前进到浏览器历史记录中的下一页
-     • reload(**kwargs)：重新加载当前页面
-    """
-
-    @allure.step("--> 访问页面，路由：{url}，超时时间： {timeout} 毫秒")
-    def visit(self, url: str, timeout=5000) -> None:
-        """
-        访问页面
-        :param url: url
-        :param timeout: 超时时间（毫秒），默认 5000ms
-        """
-        logger.info(f"--> 访问页面，路由：{url}")
-        self.page.goto(url, timeout=timeout)
-        self.wait_for_load_state(state='domcontentloaded')
-
-    @allure.step("--> 刷新页面，且状态为：{state}， 超时时间： {timeout} 毫秒")
-    def refresh(self, timeout=5000,
-                state: Optional[Literal["domcontentloaded", "load", "networkidle"]] = 'networkidle') -> None:
-        """
-        刷新页面
-        :param timeout: 超时时间（毫秒），默认 5000ms
-        :param state: Optional[Literal["domcontentloaded", "load", "networkidle"]] = 'networkidle'
-        官方默认是默认为 load， 该方法默认是networkidle
-        state:
-        domcontentloaded - 等到加载DOMContentLoaded事件
-        load - 等到加载load事件
-        networkidle - 等到500 ms没有网络请求
-        """
-        logger.info(f"--> 刷新页面，且状态为：{state}， 超时时间： {timeout} 毫秒")
-        self.page.reload(timeout=timeout, wait_until=state)
-
     # --------------------------------- 等待 ---------------------------------#
     @allure.step("--> 强制等待{timeout}毫秒")
     def wait(self, timeout=3000):
         """
-        强制等待，单位毫秒（与 Playwright 原生一致），默认 3000ms。
-
-        ⚠️ 仅在 Playwright 的 auto-wait/`expect()` 无法覆盖（如等待外部异步副作用、
-        debug 排查）时使用；常规场景请优先用 `wait_for_load_state` 或
-        `expect(locator).to_be_visible(...)` 等基于条件的等待。
+        强制等待，单位毫秒默认 3000ms。
         """
         logger.info(f'--> 强制等待{timeout}毫秒')
         self.page.wait_for_timeout(timeout)
@@ -90,14 +49,9 @@ class BasePage:
     @allure.step("--> 点击元素 | 元素定位：{locator}")
     def click(self, locator: str, timeout: int = None) -> None:
         """
-        点击操作封装
-        封装目的：
-        1. 统一添加日志记录，方便调试
-        2. 统一添加异常处理，捕获点击失败的情况
-        3. 集成 Allure 步骤装饰器，使报告更清晰
-
+        点击操作
         :param locator: 元素定位 (xpath, css, id 等)
-        :param timeout: 超时时间（毫秒），与 Playwright 原生一致；为 None 时使用 Playwright 默认值
+        :param timeout: 超时时间（毫秒
         """
         try:
             logger.info(f"--> 点击元素 | 元素定位：{locator}")
@@ -147,10 +101,6 @@ class BasePage:
     @allure.step("--> 输入内容： {text} | 元素定位： {locator}")
     def input(self, locator: str, text: str) -> None:
         """
-        输入内容封装 (fill)
-        注意：fill 会直接填充内容，而不是模拟逐字输入 (不同于 type)
-        适用于大多数表单输入场景，速度较快
-        
         :param locator: 元素定位
         :param text: 输入的内容
         """
@@ -164,10 +114,6 @@ class BasePage:
     @allure.step("--> 键盘键入内容： {text} | 元素定位： {locator}")
     def type(self, locator: str, text: str) -> None:
         """
-        模拟键盘输入 (type)
-        一个字符一个字符的输入，模拟真实用户键盘操作
-        场景：某些输入框绑定了 keypress/keyup 事件，必须用 type 才能触发
-        
         :param locator: 元素定位
         :param text: 输入的内容
         """
@@ -241,6 +187,75 @@ class BasePage:
         self.page.screenshot(path=path, full_page=full_page)
         allure.attach.file(path, name=path)
         return path
+
+    @allure.step("--> 双击元素 | 元素定位：{locator}")
+    def dblclick(self, locator: str, timeout: int = None) -> None:
+        """
+        双击元素
+        :param locator: 元素定位
+        :param timeout: 超时时间（毫秒），为 None 时使用 Playwright 默认值
+        """
+        try:
+            logger.info(f"--> 双击元素 | 元素定位：{locator}")
+            if timeout is not None:
+                self.page.dblclick(locator, timeout=timeout)
+            else:
+                self.page.dblclick(locator)
+        except Exception as e:
+            logger.error(f"--> 双击元素 | 元素定位：{locator}，报错：{e}")
+            raise
+
+    @allure.step("--> 点击元素(移动端tap) | 元素定位：{locator}")
+    def tap(self, locator: str, timeout: int = None) -> None:
+        """
+        模拟移动端 tap 点击（触屏场景）
+        :param locator: 元素定位
+        :param timeout: 超时时间（毫秒），为 None 时使用 Playwright 默认值
+        """
+        try:
+            logger.info(f"--> 点击元素(移动端tap) | 元素定位：{locator}")
+            if timeout is not None:
+                self.page.tap(locator, timeout=timeout)
+            else:
+                self.page.tap(locator)
+        except Exception as e:
+            logger.error(f"--> 点击元素(移动端tap) | 元素定位：{locator}，报错：{e}")
+            raise
+
+    @allure.step("--> 拖拽元素 | 源：{source}，目标：{target}")
+    def drag_and_drop(self, source: str, target: str) -> None:
+        """
+        将源元素拖拽到目标元素
+        :param source: 源元素定位
+        :param target: 目标元素定位
+        """
+        logger.info(f"--> 拖拽元素 | 源：{source}，目标：{target}")
+        self.page.drag_and_drop(source, target)
+
+    @allure.step("--> 滚动元素至可视区 | 元素定位：{locator}")
+    def scroll_into_view(self, locator: str) -> None:
+        """
+        滚动元素到可视区域（如已在可视区则不操作）
+        :param locator: 元素定位
+        """
+        logger.info(f"--> 滚动元素至可视区 | 元素定位：{locator}")
+        self.page.locator(locator).scroll_into_view_if_needed()
+
+    @allure.step("--> 设置checkbox状态为：{checked} | 元素定位：{locator}")
+    def set_checked(self, locator: str, checked: bool = True) -> None:
+        """
+        设置 checkbox/radio 的勾选状态（与 check/uncheck 等价，可传 bool）
+        :param locator: 元素定位
+        :param checked: True 勾选 / False 取消
+        """
+        logger.info(f"--> 设置checkbox状态为：{checked} | 元素定位：{locator}")
+        self.page.locator(locator).set_checked(checked)
+
+    @allure.step("--> 将页面置于最前")
+    def bring_to_front(self) -> None:
+        """ 将当前页面置于所有页面的最前（多标签页场景） """
+        logger.info("--> 将页面置于最前")
+        self.page.bring_to_front()
 
     # --------------------------------- UI断言 ---------------------------------#
     @allure.step("--> 断言 | 验证元素包含文本：{text} | 元素定位：{locator}")
@@ -450,20 +465,34 @@ class BasePage:
             logger.error(f"ERROR-->获取元素的整个html源码内容 | 元素定位： {locator}，报错信息：{e} ")
             raise
 
-    @allure.step("获取当前页面的url")
-    def get_page_url(self) -> AnyStr:
+    @allure.step("--> 获取页面标题")
+    def get_title(self) -> str:
         """
-        获取当前页面的url
-        :return: url值
+        获取当前页面标题
+        :return: 标题字符串
         """
         try:
-            logger.info(f"--> 获取当前页面的url")
-            url_value = self.page.url
-            allure.attach(url_value, name="URL Value", attachment_type=allure.attachment_type.TEXT)
-            logger.success(f"--> 获取到的url值：{url_value}")
-            return url_value
+            logger.info("--> 获取页面标题")
+            title_value = self.page.title()
+            logger.success(f"--> 获取到的页面标题：{title_value}")
+            return title_value
         except Exception as e:
-            logger.error(f"ERROR --> 获取当前页面的url，报错信息：{e} ")
+            logger.error(f"ERROR --> 获取页面标题失败，报错信息：{e}")
+            raise
+
+    @allure.step("--> 获取页面 HTML 源码")
+    def get_content(self) -> str:
+        """
+        获取当前页面整个 HTML 源码
+        :return: HTML 字符串
+        """
+        try:
+            logger.info("--> 获取页面 HTML 源码")
+            content_value = self.page.content()
+            logger.success(f"--> 获取到的 HTML 源码长度：{len(content_value)}")
+            return content_value
+        except Exception as e:
+            logger.error(f"ERROR --> 获取页面 HTML 源码失败，报错信息：{e}")
             raise
 
     # --------------------------------- 断言（页面断言） ---------------------------------#

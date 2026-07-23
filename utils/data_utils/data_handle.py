@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : data_handle.py
-# @Software: PyCharm
 # @Desc: 数据处理类
 
 import ast
@@ -15,7 +13,7 @@ import random  # 导包不能移除，否则random.choice这种就不能处理�
 import re, uuid
 from loguru import logger
 from string import Template
-from config.settings import FILES_DIR
+from config.config_path import FILES_DIR
 from datetime import datetime, timedelta
 from requests.cookies import RequestsCookieJar
 from requests.utils import dict_from_cookiejar

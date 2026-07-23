@@ -26,7 +26,8 @@ class DataPage(BasePage):
         """
         访问欢迎页
         """
-        self.visit("/welcome")
+        self.page.goto("/welcome")
+        self.wait_for_load_state()
         return self
 
     @allure.step("点击【本周】筛选（第{index}处）")

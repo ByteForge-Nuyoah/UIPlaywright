@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : mysql_handle.py
-# @Software: PyCharm
 # @Desc: 使用pymysql模块连接mysql数据库的公共方法
 
 import json
@@ -25,16 +23,14 @@ class MysqlServer(BaseDB):
         """
         初始化方法中， 连接mysql数据库， 根据ssh参数决定是否走SSH隧道方式连接mysql数据库
         """
-        logger.debug("\n======================================================\n" \
-                     "-------------数据库配置信息--------------------\n"
+        logger.debug("\n===============数据库配置信息=====================\n" \
                      f"db_host: {db_host}\n" \
                      f"db_port: {db_port}\n" \
                      f"db_user: {db_user}\n" \
                      "db_pwd: <redacted>\n" \
                      f"db_database: {db_database}\n" \
                      f"ssh: {ssh}\n" \
-                     f"kwargs: {kwargs}\n" \
-                     "=====================================================")
+                     f"kwargs: {kwargs}\n")
         self.server = None
         try:
             if ssh:
@@ -96,11 +92,9 @@ class MysqlServer(BaseDB):
             self.conn.commit()
             self.cursor.execute(sql, params)
             data = self.cursor.fetchall()
-            logger.debug("\n======================================================\n" \
-                         "-------------数据库执行结果--------------------\n"
+            logger.debug("\n==========数据库执行结果=============\n" \
                          f"SQL: {sql}\n" \
-                         f"result: {mask_sensitive(data)}\n" \
-                         "=====================================================")
+                         f"result: {mask_sensitive(data)}\n")
             return data
         except Exception as e:
             logger.error(f"{sql} --> 报错: {e}")
@@ -116,11 +110,9 @@ class MysqlServer(BaseDB):
             self.conn.commit()
             self.cursor.execute(sql, params)
             data = self.cursor.fetchone()
-            logger.debug("\n======================================================\n" \
-                         "-------------数据库执行结果--------------------\n"
+            logger.debug("\n==============数据库执行结果================\n" \
                          f"SQL: {sql}\n" \
-                         f"result: {mask_sensitive(data)}\n" \
-                         "=====================================================")
+                         f"result: {mask_sensitive(data)}\n")
             return data
         except Exception as e:
             logger.error(f"{sql} --> 报错: {e}")
@@ -135,11 +127,9 @@ class MysqlServer(BaseDB):
             self.cursor.execute(sql, params)
             # 提交  只要数据库更新就要commit
             self.conn.commit()
-            logger.debug("\n======================================================\n" \
-                         "-------------数据库执行结果--------------------\n"
+            logger.debug("\n=========数据库执行结果===========\n" \
                          f"SQL: {sql}\n" \
-                         "插入数据成功！\n" \
-                         "=====================================================")
+                         "插入数据成功！\n")
         except Exception as e:
             logger.error(f"{sql} --> 报错: {e}")
             raise e
@@ -153,11 +143,9 @@ class MysqlServer(BaseDB):
             self.cursor.execute(sql, params)
             # 提交 只要数据库更新就要commit
             self.conn.commit()
-            logger.debug("\n======================================================\n" \
-                         "-------------数据库执行结果--------------------\n"
+            logger.debug("\n==========数据库执行结果============\n" \
                          f"SQL: {sql}\n" \
-                         "更新数据成功！\n" \
-                         "=====================================================")
+                         "更新数据成功！\n")
         except Exception as e:
             logger.error(f"{sql} --> 报错: {e}")
             raise e

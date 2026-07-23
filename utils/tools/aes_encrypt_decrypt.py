@@ -1,16 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : aes_encrypt_decrypt.py
-# @Software: PyCharm
 # @Desc: AES 加密解密
-
-"""
-@FileName：aes_encrypt_decrypt.py
-@Description：
-@Author：Floraachy
-@Time：2024/11/22 14:48
-"""
 
 """
 AES 加密最常用的模式就是 ECB模式 和 CBC 模式，当然还有很多其它模式，他们都属于AES加密。ECB模式和CBC 模式俩者区别就是 ECB 不需要 iv偏移量，而CBC需要。

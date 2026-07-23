@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : allure_handle.py
-# @Software: PyCharm
 # @Desc: allure测试报告美化
 
 import os
 import json
-import subprocess
 import allure
+import subprocess
 from loguru import logger
 from utils.models import AllureAttachmentType
 from utils.report_utils.platform_handle import PlatformHandle
@@ -187,9 +185,6 @@ def generate_allure_report(**kwargs):
         env_info=kwargs.get("env_info"))
 
     # ----------------压缩allure测试报告，方便后续发送压缩包------------------------------------------
-    # 复制 http_server.exe 与「双击打开Allure报告.bat」到报告目录，便于 Windows 下直接双击查看。
-    # 该步骤为 Windows 便捷打开方式，非报告生成的必要环节：
-    # 当 allure_config_path 不存在、或目录下无对应文件（如 macOS/Linux/CI 环境）时，跳过且不报错。
     allure_config_path = kwargs.get("allure_config_path")  # 保存http_server.exe及双击打开Allure报告.bat的目录
     if allure_config_path and os.path.isdir(allure_config_path):
         def _first_file(suffix):

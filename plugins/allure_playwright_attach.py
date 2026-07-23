@@ -2,10 +2,7 @@
 # @Version: Python 3.13
 # @File    : allure_playwright_attach.py
 # @Desc    : 将 pytest-playwright 落盘的截图 / 视频 / trace 自动附到 Allure 报告。
-# 文件是否存在由 pytest-playwright 的开关决定：
-#     --screenshot=on              每条用例都保存截图（成功 + 失败）
-#     --video=retain-on-failure    仅失败用例保留视频
-#     --tracing=retain-on-failure  仅失败用例保留 trace.zip
+
 
 from pathlib import Path
 from typing import Optional
@@ -52,13 +49,9 @@ def pytest_runtest_teardown(item, nextitem):
     output_root = Path(item.config.getoption("--output", default="test-results"))
     if not output_root.exists():
         return
-
-    # pytest-playwright 使用 slugify(nodeid)（可能再截断）作为每用例的子目录名。
-    # 这里挑两个最常见的候选位置，命中其一即可。
     try:
         from slugify import slugify
     except ImportError:
-        # 极端兜底：扫描整个 output 根目录（成本可控，单条用例 teardown 触发）
         _attach_dir(output_root, allure_mod)
         return
 

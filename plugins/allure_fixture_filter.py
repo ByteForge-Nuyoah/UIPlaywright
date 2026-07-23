@@ -23,13 +23,8 @@ HIDDEN_FIXTURES = frozenset({
     "new_context",
 })
 
-# 白名单（参考用，不在逻辑里使用）：
-#   browser / context / page / storage_state_path / setup_teardown_for_each
-
-
 def _make_start_wrapper(original):
     """包装 start_before/after_fixture：命中黑名单则跳过原方法。"""
-    # 用闭包共享一组 uuid，确保配套的 stop_* 也能跳过
     hidden_uuids = set()
 
     def wrapper(self, parent_uuid, uuid, fixture):

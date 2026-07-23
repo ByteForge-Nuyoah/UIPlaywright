@@ -1,15 +1,11 @@
-
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : test_po_style_converter.py
-# @Software: PyCharm
 # @Desc    : Page Object 风格转换工具测试
 
+import sys
 import ast
 import subprocess
-import sys
-
 from utils.tools.po_style_converter import convert_script, generate_suite
 
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : dingding_bot.py
-# @Software: PyCharm
 # @Desc: 钉钉通知封装
 
 import time

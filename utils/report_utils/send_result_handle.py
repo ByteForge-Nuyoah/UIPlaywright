@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : send_result_handle.py
-# @Software: PyCharm
 # @Desc: 根据配置文件，发送指定通知
 
 from loguru import logger
@@ -71,13 +69,6 @@ def send_wechat(webhook_url, content, attachment=None):
 def send_result(report_info: dict, report_path: str, attachment_path: str = None):
     """
     发送测试结果通知
-    
-    功能：
-    1. 根据配置文件中的 SEND_RESULT_TYPE 决定发送方式 (邮件、钉钉、企业微信)
-    2. 从 Allure 报告中解析测试统计数据 (通过率、用例数等)
-    3. 动态替换通知模板中的变量 (如 ${pass_rate})
-    4. 支持单渠道或多渠道同时发送
-    
     :param report_info: 报告元数据 (测试人员、部门、环境等)
     :param report_path: Allure HTML 报告的根目录路径
     :param attachment_path: 附件路径 (通常是 zip 压缩包)

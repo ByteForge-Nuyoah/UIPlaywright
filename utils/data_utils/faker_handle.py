@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : faker_handle.py
-# @Software: PyCharm
 # @Desc: 测试数据生成类
 
 import re
@@ -16,7 +14,6 @@ from datetime import datetime, date, timedelta
 class FakerData:
     """
     测试数据生成类
-    官方文档：https://faker.readthedocs.io/en/master/index.html
     """
 
     def __init__(self):

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : po_style_converter.py
-# @Software: PyCharm
 # @Desc    : Playwright录制片段转 account_page.py 风格 Page Object 工具
 
 """

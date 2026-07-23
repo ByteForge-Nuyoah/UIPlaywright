@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
-# @File    : base_db.py
-# @Desc    : 数据库抽象基类，定义统一接口供 MySQL/SQLite/PostgreSQL 等子类实现
+# @Author: 会飞的🐟
+# @Desc : 数据库抽象基类，定义统一接口供 MySQL/SQLite/PostgreSQL 等子类实现
 
 from abc import ABC, abstractmethod
 
@@ -9,9 +9,6 @@ from abc import ABC, abstractmethod
 class BaseDB(ABC):
     """
     数据库抽象基类，定义统一的查询/插入/更新/关闭接口。
-
-    子类（如 MysqlServer）实现具体数据库的连接与执行逻辑。
-    支持 ``with BaseDB 子类(...) as db:`` 上下文管理，确定性释放连接。
     """
 
     @abstractmethod

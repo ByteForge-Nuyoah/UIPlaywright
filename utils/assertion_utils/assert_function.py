@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : assert_function.py
-# @Software: PyCharm
 # @Desc: 断言方法
 
 import allure

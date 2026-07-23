@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : base_request.py
-# @Software: PyCharm
 # @Desc: 接口请求
 
 from loguru import logger
@@ -12,13 +10,8 @@ from playwright.sync_api import BrowserContext, Page, APIRequestContext
 
 class BaseRequest:
     """
-     playwright_发起接口请求
-     Playwright下发起接口请求有三种方法:
-        1) browser_context.request
-        2) page.request发起请求
-        3) 手动创建一个新的APIRequest上下文实例发起请求（不需要打开浏览器）。
-        前两种属于通过浏览器发起请求，需要驱动浏览器。如果不想驱动浏览器直接发起接口请求可以使用第三种。
-    另外每个Playwright浏览器上下文都有与其关联的APIRequestContext实例，该实例与浏览器上下文共享cookie存储，所以在接口与接口之间不需要手动管理cookie，这一点就跟requests库下的session类的作用一样。
+    Playwright浏览器上下文都有与其关联的APIRequestContext实例，
+    该实例与浏览器上下文共享cookie存储，所以在接口与接口之间不需要手动管理cookie，这一点就跟requests库下的session类的作用一样。
     """
 
     def __init__(self, api_page: Page = None, api_context: BrowserContext = None,
@@ -130,7 +123,6 @@ if __name__ == '__main__':
     import getpass
 
     with sync_playwright() as p:
-        # 获取 google chrome 的本地缓存文件，只需要在浏览器上登录后，就能获取到用户信息。注意：使用的时候需要关闭掉浏览器所有窗口，否则会报错
         USER_DIR_PATH = f"C:\\Users\\{getpass.getuser()}\\AppData\Local\Google\Chrome\\User Data"
         browser = p.chromium.launch_persistent_context(
             headless=False,

@@ -1,32 +1,23 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : task_scheduler.py
-# @Software: PyCharm
 # @Desc: 定时任务
 
 import os
 import sys
-
-# 确保项目根目录在 sys.path 中，使得直接以脚本方式启动（python .../task_scheduler.py）时
-# 也能正确解析 from config.settings import ...
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
-
 import time
 import schedule
 import subprocess
 from loguru import logger
 from datetime import datetime
-
-from config.settings import scheduler, BASE_DIR
+from config.settings import scheduler
+from config.config_path import BASE_DIR
 
 
 def run_automation_task():
-    """
-    Execute the automation test run command.
-    """
     logger.info(f"Starting scheduled task at {datetime.now()}")
     try:
         # Use the current python executable
@@ -56,7 +47,7 @@ def run_automation_task():
 
 def start_scheduler():
     """
-    按 config.settings.scheduler["time"] 配置的时间每天触发一次自动化任务。
+    配置的时间每天触发一次自动化任务。
     """
     logger.info("Scheduler service started. Waiting for tasks...")
     logger.info(f"Task scheduled for every day at {scheduler['time']}")

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : assert_control.py
-# @Software: PyCharm
 # @Desc: 断言类型封装，支持json响应断言、正则表达式响应断言、数据库断言
 
 import types

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : func_handle.py
-# @Software: PyCharm
-# @Desc: 函数装饰器，它接受一个字符串参数docstring，
+# @Desc: 函数装饰器，它接受一个字符串参数docstring
+
 def add_docstring(docstring):
     """
     函数装饰器，它接受一个字符串参数docstring，

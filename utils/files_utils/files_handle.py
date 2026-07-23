@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : files_handle.py
-# @Software: PyCharm
 # @Desc: 处理文件相关操作
 
 import os
@@ -153,8 +151,6 @@ def get_file_field(file_path):
 
 def get_relative_path(file_path, directory_path):
     """
-    os.path.relpath()是Python中os.path模块提供的一个函数，用于计算两个路径之间的相对路径。
-    例如：file_path=data/gitlink/project/test_login_demo.yaml， directory_path=data， 将返回/gitlink/project
     :param: file_path: 文件路径
     :param: directory_path: 相对于目录路径
     """

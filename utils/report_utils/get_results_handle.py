@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : get_results_handle.py
-# @Software: PyCharm
 # @Desc: 从测试报告中获取测试结果
 
 import os

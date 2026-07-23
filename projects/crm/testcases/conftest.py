@@ -6,6 +6,7 @@
 # @Desc    : 项目级 fixture：UI 预登录 + storage_state 注入
 
 import os
+import re
 import json
 import time
 import base64
@@ -14,7 +15,8 @@ import traceback
 from loguru import logger
 from playwright.sync_api import Browser
 from config.global_vars import GLOBAL_VARS
-from config.settings import resolve_window_size, AUTH_DIR
+from config.settings import resolve_window_size
+from config.config_path import AUTH_DIR, BASE_DIR
 from utils.base_utils.request_control import RequestControl
 from pages.login_page import LoginPage
 
@@ -22,14 +24,58 @@ from pages.login_page import LoginPage
 # 使本 conftest 可零改动复用到任意项目（登录态文件名等均按项目名隔离）
 PROJECT_NAME = os.path.basename(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
+# 自动发现：扫描 testcases/test_*.py 中的 @pytest.mark.<name>，免去新增页面/录制后手动注册
+_MARKER_RE = re.compile(r"@pytest\.mark\.(\w+)")
+# pytest 内置 / pytest-playwright 自带 marker，不重复注册，保持 --markers 干净
+_BUILTIN_MARKERS = {
+    "parametrize", "skip", "skipif", "xfail", "usefixtures",
+    "filterwarnings", "browser_context_args",
+}
+
+
+def _discover_project_markers(testcases_dir):
+    """递归扫描 testcases/ 及子目录（api/ui）的 test_*.py，返回去重后的特性 marker 名（排除内置）。"""
+    found = set()
+    for root, _dirs, files in os.walk(testcases_dir):
+        for name in files:
+            if not (name.startswith("test_") and name.endswith(".py")):
+                continue
+            try:
+                with open(os.path.join(root, name), "r", encoding="utf-8") as f:
+                    found.update(_MARKER_RE.findall(f.read()))
+            except OSError:
+                continue
+    return sorted(found - _BUILTIN_MARKERS)
+
+
+def pytest_configure(config):
+    """注册 markers：固定分类 + 自动扫描 testcases/test_*.py 中的 @pytest.mark.xxx。
+
+    固定列表保留 login/api/recordings 等分类 marker（即便尚无对应 test 文件也注册）；
+    其余特性 marker（如 my_account 及后续新增录制的 <base>）由扫描自动注册，
+    新增页面/录制无需再手改本文件。
+    """
+    fixed = [
+        "login: login cases",
+        "api: api interface cases",
+        "recordings: playwright recorded cases converted to POM",
+    ]
+    fixed_names = {m.split(":", 1)[0] for m in fixed}
+    for marker in fixed:
+        config.addinivalue_line("markers", marker)
+    testcases_dir = os.path.dirname(os.path.abspath(__file__))
+    for name in _discover_project_markers(testcases_dir):
+        if name in fixed_names:
+            continue
+        config.addinivalue_line("markers", f"{name}: auto-discovered from testcases")
+
+
 # 登录态文件路径：.auth/<project>_state.json
 AUTH_STATE_PATH = os.path.join(AUTH_DIR, f"{PROJECT_NAME}_state.json")
 
-# 项目级接口池目录（projects/<name>/interfaces）
-PROJECT_INTERFACE_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "interfaces"
-)
+# 接口池目录（项目根 interfaces/，各项目接口按文件名隔离，供本项目及脚手架新增项目共用）
+INTERFACE_DIR = os.path.join(BASE_DIR, "interfaces")
 
 # 登录态默认有效期（兜底，当无法从 JWT 解析 exp 时使用），单位秒
 STORAGE_STATE_TTL = 3600
@@ -91,10 +137,10 @@ def login_and_save_state(page, login, password, state_path):
     复用 LoginPage，消除 conftest 内联登录代码重复。
     """
     login_page = LoginPage(page)
-    login_page.navigate(timeout=30)
+    login_page.navigate(timeout=30000)
     login_page.login_on_page_flow(login=login, password=password)
     # 等到 URL 离开登录页（token 已被前端写进 localStorage）
-    page.wait_for_url(lambda url: "/user/login" not in url, timeout=15000)
+    page.wait_for_url(lambda url: "/login" not in url, timeout=15000)
     os.makedirs(os.path.dirname(state_path), exist_ok=True)
     page.context.storage_state(path=state_path)
     logger.success(f"登录态已保存至: {state_path}")
@@ -255,7 +301,7 @@ def api_session_setup(browser: Browser):
     登录接口的 file / key / 变量映射 / 额外参数统一由 project_settings.py 的
     ENV_VARS["common"]["login_api"] 配置（经 run.py 写入 GLOBAL_VARS），本 fixture 对所有项目通用：
         login_api = {
-            "file": "<name>_login.yml",          # 相对本项目 interfaces/ 目录
+            "file": "<name>_login.yml",          # 相对项目根 interfaces/ 目录
             "key": "<name>_login",                # yml 中的 id
             "var_map": {"<payload_key>": "<GLOBAL_VARS_key>"},  # 凭据等字段映射
             "extra_vars": {"<k>": "<v>"},         # 接口需要的固定参数
@@ -274,7 +320,7 @@ def api_session_setup(browser: Browser):
     elif not login_api_cfg:
         logger.info("未配置 login_api，跳过 API 会话准备")
     else:
-        login_api = os.path.join(PROJECT_INTERFACE_DIR, login_api_cfg["file"])
+        login_api = os.path.join(INTERFACE_DIR, login_api_cfg["file"])
         if not os.path.exists(login_api):
             logger.warning(f"接口定义不存在：{login_api}，跳过 API 会话准备")
         else:

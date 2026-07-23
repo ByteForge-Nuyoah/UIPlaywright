@@ -253,7 +253,7 @@ if __name__ == '__main__':
 
     with sync_playwright() as p:
         # 获取 google chrome 的本地缓存文件
-        USER_DIR_PATH = f"C:\\Users\\{getpass.getuser()}\\AppData\Local\Google\Chrome\\User Data"
+        USER_DIR_PATH = rf"C:\Users\{getpass.getuser()}\AppData\Local\Google\Chrome\User Data"
         browser = p.chromium.launch_persistent_context(
             headless=False,
             # 指定本机用户缓存地址
