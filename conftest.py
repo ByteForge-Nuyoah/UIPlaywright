@@ -18,6 +18,7 @@ from config.config_path import REPORT_DIR
 pytest_plugins = [
     'plugins.allure_playwright_attach',  # 失败用例的截图/视频/trace 自动挂到 Allure
     'plugins.allure_fixture_filter',     # 过滤 Allure Set up/Tear down 区域的内部噪声 fixture
+    'plugins.allure_step_flatten',       # 拍平 Allure step 树：仅保留 BasePage 叶子动作为单层 step
 ]
 
 
