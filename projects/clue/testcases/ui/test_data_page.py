@@ -9,7 +9,8 @@ import os
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-from pages.home_page import HomePage
+from pages.common_page import CommonPage
+from pages.data_page import DataPage
 from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
 
@@ -26,21 +27,21 @@ class TestDataPage:
     def setup_teardown_for_each(self, page: Page):
         """
         page fixture 已通过项目级 conftest 注入 storage_state（默认携带登录态）。
-        入口统一通过 HomePage 派发，体现完整 PO 链。
+        入口统一通过 CommonPage 派发，体现完整 PO 链。
         """
         logger.info("\n\n---------------Start: 欢迎页交互测试-------------")
-        # 先到 /welcome，再由 HomePage 派发到 DataPage
+        # 先到 /welcome（根路径重定向），DataPage 即着陆页内容，由 CommonPage 直接派发
         page.goto(GLOBAL_VARS["url"])
-        self.home_page = HomePage(page)
+        self.common_page = CommonPage(page)
         yield
 
     @pytest.mark.parametrize("case", cases["data_overview_page"], ids=lambda x: x["title"])
     def test_data_interaction(self, case):
-        """欢迎页交互：HomePage → DataPage 链式调用执行完整流程后断言仍在 /welcome。"""
+        """欢迎页交互：CommonPage → DataPage 链式调用执行完整流程后断言仍在 /welcome。"""
         # 操作步骤：首页 → 数据概览页 → 切换月份/范围/范围/公司 → 执行交互流程
         data_page = (
-            self.home_page
-            .goto_data()
+            self.common_page
+            .goto(DataPage)
             .data_interaction_flow(
                 month_text=case.get("month_text", "1月"),
                 range_label=case.get("range_label", "一年"),

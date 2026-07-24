@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @Desc    : 跨页面通用页面对象：登录态布局壳（顶部头像 + 左侧菜单）与跨页导航
+# @Desc    : 跨页面通用页面对象：登录态布局壳（顶部头像 + 左侧菜单）、跨页导航与登录态校验
 
 import re
 import allure
@@ -10,7 +10,7 @@ from utils.base_utils.base_page import BasePage
 
 class CommonPage(BasePage):
     """
-    跨页面通用页面对象：登录后所有页面共享的布局壳元素与跨页导航。
+    跨页面通用页面对象：登录后所有页面共享的布局壳元素、跨页导航与登录态校验。
     - 顶部：用户头像区
     - 左侧：导航菜单（ant-design pro 持久 layout，非任一具体页面专属）
     - 跨页导航：通过 goto(page_cls, *targets) 通用跳转，新增页面无需在本类加方法，
@@ -24,6 +24,16 @@ class CommonPage(BasePage):
     locator_menu_account_management = "text=账号管理"
     locator_menu_vehicle_management = "text=车辆管理"
     locator_link_vehicle_list = "text=车辆列表"
+
+    @allure.step("校验已成功登录（URL 已进入 /welcome）")
+    def assert_on_home(self, timeout: int = 5000):
+        """
+        断言登录成功：URL 已进入 /welcome 着陆页。
+        登录失败时 URL 仍停留在 /user/login，此断言会失败，链式调用在此截断。
+        （原 HomePage 的职责，登录态校验归入 CommonPage 后首页壳不再单独建类。）
+        """
+        self.assert_url_contains(url="/welcome", timeout=timeout)
+        return self
 
     @allure.step("点击导航目标：{target}")
     def click_nav(self, target: str):

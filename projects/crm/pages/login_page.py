@@ -57,10 +57,10 @@ class LoginPage(BasePage):
     @allure.step("网页登录：输入用户名：{login}，输入密码：{password}，点击【登录】按钮，提交登录表单")
     def login_on_page_flow(self, login, password):
         """
-        登录操作 --> 输入用户名 + 密码 -> 提交表单 -> 返回首页。
-        :return: HomePage 实例（登录成功后的着陆页，调用方可继续断言或经 CommonPage 跨页导航）
+        登录操作 --> 输入用户名 + 密码 -> 提交表单 -> 返回登录态。
+        :return: CommonPage 实例（登录成功后的着陆态，调用方可继续 assert_on_home 或经 goto 跨页导航）
         """
-        from pages.home_page import HomePage
+        from pages.common_page import CommonPage
         (self
          .input_username_on_page(login)
          .input_password_on_page(password)
@@ -69,7 +69,7 @@ class LoginPage(BasePage):
             self.page.wait_for_url(lambda url: "/login" not in url, timeout=5000)
         except PlaywrightTimeoutError:
             pass
-        return HomePage(self.page)
+        return CommonPage(self.page)
 
     @allure.step("CRM 登录完整录制流程：账号 {account} -> 登录 -> 进入我的账号")
     def login_recorded_flow(self, case):

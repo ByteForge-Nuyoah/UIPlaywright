@@ -38,12 +38,12 @@ class TestLogin:
         login = case.get("login")
         password = case.get("password")
         title = case.get("title", "")
-        # 操作步骤：登录页输入用户名及密码，点击登录按钮，提交登录表单 -> 返回首页
-        home_page = self.login_page.login_on_page_flow(login=login, password=password)
+        # 操作步骤：登录页输入用户名及密码，点击登录按钮，提交登录表单 -> 返回登录态(CommonPage)
+        common_page = self.login_page.login_on_page_flow(login=login, password=password)
 
         if "成功" in title:
             # 断言：登录成功，已进入首页
-            home_page.assert_on_home()
+            common_page.assert_on_home()
         else:
             # 断言：登录失败，仍停留在 /login
             assert "/login" in self.login_page.page.url, "登录失败时应停留在登录页"

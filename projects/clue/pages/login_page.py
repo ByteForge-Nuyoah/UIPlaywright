@@ -43,16 +43,16 @@ class LoginPage(BasePage):
     @allure.step("网页登录：输入用户名：{login}，输入密码：{password}，点击【登录】按钮，提交登录表单")
     def login_on_page_flow(self, login, password):
         """
-        完整登录操作 --> 输入用户名 + 密码 → 提交表单 → 返回首页。
+        完整登录操作 --> 输入用户名 + 密码 → 提交表单 → 返回登录态。
         设计：
-        - 登录成功：返回 HomePage；后续跨页导航用 CommonPage(page).goto_xxx()
-        - 登录失败：URL 仍停留在 /user/login，调用方应在拿到 HomePage 实例后
+        - 登录成功：返回 CommonPage；后续跨页导航用 CommonPage(page).goto(...)
+        - 登录失败：URL 仍停留在 /user/login，调用方应在拿到 CommonPage 实例后
           先做 URL 断言（assert_url_contains("/user/login")）再判断；
-          失败用例通常不会再继续链式动作，所以 HomePage 实例可被丢弃。
+          失败用例通常不会再继续链式动作，所以 CommonPage 实例可被丢弃。
 
-        :return: HomePage 实例
+        :return: CommonPage 实例
         """
-        from pages.home_page import HomePage
+        from pages.common_page import CommonPage
 
         self.input_username_on_page(login) # 输入用户名
         self.input_password_on_page(password) # 输入密码
@@ -61,4 +61,4 @@ class LoginPage(BasePage):
             self.page.wait_for_url(lambda url: "/user/login" not in url, timeout=5000)
         except PlaywrightTimeoutError:
             pass
-        return HomePage(self.page)
+        return CommonPage(self.page)

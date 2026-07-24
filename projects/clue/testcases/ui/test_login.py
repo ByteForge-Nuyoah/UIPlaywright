@@ -12,7 +12,6 @@ from loguru import logger
 from playwright.sync_api import Page
 
 from pages.login_page import LoginPage
-from pages.common_page import CommonPage
 from utils.files_utils.yaml_handle import YamlHandle
 
 
@@ -46,19 +45,17 @@ class TestLogin:
         login = case.get("login")
         password = case.get("password")
         title = case.get("title", "")
-        common_page = CommonPage(self.login_page.page)
-
-        # 操作步骤：登录页输入用户名及密码，点击【登录】按钮，提交登录表单
-        self.login_page.login_on_page_flow(login=login, password=password)
+        # 操作步骤：登录页输入用户名及密码，点击【登录】按钮，提交登录表单 -> 返回登录态(CommonPage)
+        common_page = self.login_page.login_on_page_flow(login=login, password=password)
 
         # 断言：按标题分支
         if "成功" in title:
             # 断言：登录成功，页面进入 /welcome
-            self.login_page.assert_url_contains(url="/welcome")
+            common_page.assert_on_home()
             # 断言：导航栏右上角用户头像区已渲染（登录成功才会出现）
             # 说明：当前系统头像是 ant-design Avatar（span），非 <a> 标签无 href，
             #       故用头像区容器可见性替代模板原「头像 a 标签 href=/${login}」断言
             common_page.assert_element_visible(locator=common_page.locator_avatar_nickname)
         else:
             # 断言：登录失败，仍停留在 /user/login
-            self.login_page.assert_url_contains(url="/user/login")
+            common_page.assert_url_contains(url="/user/login")
