@@ -41,6 +41,8 @@ class PoStyleConverter:
         self.locators: Dict[str, str] = {}
         self.locator_counts: Dict[str, int] = {}
         self.unsupported_lines: List[str] = []
+        # 录制里的 page.goto(...) 起始 URL（导航由用例 setup 负责，转换时仅记录供参考）
+        self.recorded_urls: List[str] = []
 
     def convert(self, script: str) -> str:
         actions = self._parse_script(script)
@@ -67,6 +69,12 @@ class PoStyleConverter:
             if not line.startswith("page."):
                 continue
 
+            # page.goto(...) 仅记录起始 URL，不生成动作（导航由用例 setup 的 page.goto 负责）
+            goto_match = re.match(r"page\.goto\(\"([^\"]+)\"\)", line)
+            if goto_match:
+                self.recorded_urls.append(goto_match.group(1))
+                continue
+
             action = self._parse_action_line(line)
             if not action:
                 self.unsupported_lines.append(line)
@@ -81,7 +89,7 @@ class PoStyleConverter:
 
             actions.append(action)
 
-        return self._dedupe_method_names(self._merge_click_fill(actions))
+        return self._dedupe_method_names(self._merge_redundant(self._merge_click_fill(actions)))
 
     def _parse_action_line(self, line: str) -> Optional[RecordedAction]:
         target, action_type, value = self._split_target_action(line)
@@ -116,6 +124,7 @@ class PoStyleConverter:
         patterns = [
             ("fill", r"^(page\..+)\.fill\(\"(.*)\"\)$"),
             ("press", r"^(page\..+)\.press\(\"(.*)\"\)$"),
+            ("upload", r"^(page\..+)\.set_input_files\(\"(.*)\"\)$"),
             ("click", r"^(page\..+)\.click\(\)$"),
             ("check", r"^(page\..+)\.check\(\)$"),
         ]
@@ -127,8 +136,8 @@ class PoStyleConverter:
         return None, None, ""
 
     def _parse_locator_chain(self, target: str):
-        # page.get_by_role("button", name="Close")
-        role_match = re.search(r"page\.get_by_role\(\"([^\"]+)\",\s*name=\"([^\"]+)\"\)", target)
+        # page.get_by_role("button", name="Close") 或 page.get_by_role("textbox", name="手机号", exact=True)
+        role_match = re.search(r"page\.get_by_role\(\"([^\"]+)\",\s*name=\"([^\"]+)\"(?:,\s*exact=True)?\)", target)
         if role_match:
             role, name = role_match.groups()
             locator_expr = self._role_to_locator(role, name)
@@ -223,6 +232,53 @@ class PoStyleConverter:
             index += 1
         return merged
 
+    def _merge_redundant(self, actions: List[RecordedAction]) -> List[RecordedAction]:
+        """
+        合并 codegen 录制里的试错冗余（仅在「同一 locator_key」局部范围内，避免误伤跨字段动作）：
+        1. 连续 fill 同字段 -> 取末值（fill 本就覆盖，前次无效）；
+        2. fill -> press(Enter 等) -> fill 同字段 -> 视为试错，丢弃中间 press，末值覆盖；
+        3. fill -> click(重聚焦) -> fill 同字段 -> 丢弃重聚焦 click，末值覆盖；
+        4. press(ArrowLeft/Backspace 等光标退键) 夹在同字段动作间 -> 丢弃；
+        5. 连续相同 click 同字段 -> 去重为一次。
+        """
+        backspace_keys = {"ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+                          "Backspace", "Delete", "Home", "End"}
+        result: List[RecordedAction] = []
+        for action in actions:
+            prev = result[-1] if result else None
+            prev2 = result[-2] if len(result) >= 2 else None
+            same_loc = lambda a, b: a and b and a.locator_key == b.locator_key
+
+            # 规则 4：光标/退键试错
+            if (action.action_type == "press" and action.value in backspace_keys
+                    and same_loc(prev, action)):
+                continue
+            # 规则 1：连续 fill
+            if (action.action_type == "fill" and prev and prev.action_type == "fill"
+                    and same_loc(prev, action)):
+                prev.value = action.value
+                continue
+            # 规则 2：fill -> press -> fill
+            if (action.action_type == "fill" and prev and prev.action_type == "press"
+                    and same_loc(prev, action) and prev2 and prev2.action_type == "fill"
+                    and same_loc(prev2, action)):
+                result.pop()
+                prev2.value = action.value
+                continue
+            # 规则 3：fill -> click(重聚焦) -> fill
+            if (action.action_type == "fill" and prev and prev.action_type == "click"
+                    and same_loc(prev, action) and prev2 and prev2.action_type == "fill"
+                    and same_loc(prev2, action)):
+                result.pop()
+                prev2.value = action.value
+                continue
+            # 规则 5：连续相同 click
+            if (action.action_type == "click" and prev and prev.action_type == "click"
+                    and same_loc(prev, action) and prev.label == action.label):
+                continue
+            result.append(action)
+        return result
+
     def _dedupe_method_names(self, actions: List[RecordedAction]) -> List[RecordedAction]:
         seen: Dict[str, tuple] = {}
         counts: Dict[str, int] = {}
@@ -257,6 +313,9 @@ class PoStyleConverter:
             f"class {self.class_name}(BasePage):",
         ]
 
+        if self.recorded_urls:
+            lines.append(f"    # 录制起始 URL：{self.recorded_urls[0]}（导航由用例 setup 负责，此处仅备查）")
+
         if self.unsupported_lines:
             lines.extend(["", "    # TODO: 以下录制行暂未自动转换，请人工补充："])
             for line in self.unsupported_lines:
@@ -264,7 +323,8 @@ class PoStyleConverter:
 
         if self.locators:
             for name, selector in self.locators.items():
-                lines.append(f"    {name} = {selector!r}")
+                note = "  # TODO: 自动 ID，每次会话变化，建议改用 label/role 定位" if "el-id" in selector else ""
+                lines.append(f"    {name} = {selector!r}{note}")
         else:
             lines.append("    pass")
 
@@ -281,9 +341,7 @@ class PoStyleConverter:
         lines.append("        \"\"\"")
         lines.append("        (self")
         for action in actions:
-            if action.action_type == "fill":
-                lines.append(f"         .{action.method_name}(case.get(\"{action.data_key}\", {action.value!r}))")
-            elif action.action_type == "press":
+            if action.action_type in {"fill", "press", "upload"}:
                 lines.append(f"         .{action.method_name}(case.get(\"{action.data_key}\", {action.value!r}))")
             elif action.action_type in {"download", "download_popup"}:
                 lines.append(f"         .{action.method_name}()")
@@ -304,6 +362,9 @@ class PoStyleConverter:
         elif action.action_type == "press":
             lines.append(f"    def {action.method_name}(self, key):")
             lines.append(f"        self.press({locator_ref}, key)")
+        elif action.action_type == "upload":
+            lines.append(f"    def {action.method_name}(self, value):")
+            lines.append(f"        self.upload_file({locator_ref}, value)")
         elif action.action_type == "check":
             lines.append(f"    def {action.method_name}(self):")
             lines.append(f"        self.click({locator_ref})")
@@ -335,6 +396,7 @@ class PoStyleConverter:
             "fill": "input",
             "check": "select",
             "press": "press",
+            "upload": "upload",
             "download": "download",
             "download_popup": "download",
         }.get(action_type, action_type)
@@ -345,6 +407,8 @@ class PoStyleConverter:
             return f"输入{label}：{{value}}"
         if action_type == "press":
             return f"在{label}按键：{{key}}"
+        if action_type == "upload":
+            return f"上传文件：{{value}}"
         if action_type == "check":
             return f"选择【{label}】"
         return f"点击【{label}】"
@@ -382,7 +446,7 @@ class PoStyleConverter:
         data = {
             action.data_key: action.value
             for action in actions
-            if action.action_type in {"fill", "press"} and action.value
+            if action.action_type in {"fill", "press", "upload"} and action.value
         }
         lines = [f"{self.case_key()}:", f"  - title: {self.class_name}录制流程", "    run: true"]
         for key, value in data.items():
@@ -420,7 +484,7 @@ class PoStyleConverter:
             f"class {test_class}:",
             f"    \"\"\"{self.class_name}录制流程\"\"\"",
             "",
-            f"    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), \"data\", \"{data_file}\")",
+            f"    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), \"data\", \"{data_file}\")",
             "    cases = YamlHandle(data_path).read_yaml",
             "",
             "    @pytest.fixture(autouse=True)",
@@ -509,10 +573,10 @@ def main():
     parser.add_argument("--output", "-o", help="输出 Page Object 文件；不传则打印到控制台")
     parser.add_argument("--class-name", "-c", required=True, help="页面类名，例如 DevicePage")
     parser.add_argument("--file-name", help="生成文件头里的文件名，例如 device_page.py")
-    parser.add_argument("--suite-dir", help="生成 page/data/testcase 三件套的目录，例如 projects/clue")
+    parser.add_argument("--suite-dir", help="生成 page/data/testcase 三件套的目录，例如 projects/crm")
     parser.add_argument("--page-subdir", default="pages", help="page 文件相对 suite-dir 的目录，默认 pages")
     parser.add_argument("--data-subdir", default="data", help="data 文件相对 suite-dir 的目录，默认 data")
-    parser.add_argument("--testcase-subdir", default="testcases", help="testcase 文件相对 suite-dir 的目录，默认 testcases")
+    parser.add_argument("--testcase-subdir", default="testcases/ui", help="testcase 文件相对 suite-dir 的目录，默认 testcases/ui")
     parser.add_argument("--page-import", help="testcase 中导入 page 的模块名，例如 device.device_page")
     args = parser.parse_args()
 

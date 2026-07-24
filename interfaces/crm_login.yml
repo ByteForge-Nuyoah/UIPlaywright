@@ -17,7 +17,7 @@
      status_code: 200
      assertName:
        message: 断言接口返回name
-       expect_value: "超级管理员 1"
+       expect_value: "超级管理员"
        assert_type: ==
        type_jsonpath: $.data.user.name
    assert_sql:

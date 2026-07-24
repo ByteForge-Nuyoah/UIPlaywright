@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : vehicle_list_page.py
-# @Software: PyCharm
 # @Desc    : 车辆管理/车辆列表
 
 import allure

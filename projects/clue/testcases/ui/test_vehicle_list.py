@@ -9,6 +9,7 @@ import os
 import pytest
 from loguru import logger
 from pages.common_page import CommonPage
+from pages.vehicle_list_page import VehicleListPage
 from playwright.sync_api import Page
 from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
@@ -39,7 +40,7 @@ class TestVehicleList:
         # 操作步骤：经左侧菜单进入车辆列表页 → 按设备号筛选 → 导出脱敏数据与敏感数据
         desensitized_download, sensitive_download = (
             self.common_page
-            .goto_vehicle_list()
+            .goto(VehicleListPage, CommonPage.locator_menu_vehicle_management, CommonPage.locator_link_vehicle_list)
             .vehicle_list_filter_export_flow(device_no=case["device_no"])
         )
 

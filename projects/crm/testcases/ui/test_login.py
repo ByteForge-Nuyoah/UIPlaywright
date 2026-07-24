@@ -38,17 +38,18 @@ class TestLogin:
     def test_login_user(self, case):
         """
         网页登录：输入用户名密码并提交，按用例标题分支断言登录成功/失败。
-        - 标题含「成功」：URL 离开 /login（登录成功跳转）
+        - 标题含「成功」：进入首页（URL 离开 /login）
         - 标题含「失败」：仍停留在 /login
         """
         login = case.get("login")
         password = case.get("password")
         title = case.get("title", "")
-        self.login_page.login_on_page_flow(login=login, password=password)
+        # 操作步骤：登录页输入用户名及密码，点击【登录】按钮，提交登录表单 -> 返回首页
+        home_page = self.login_page.login_on_page_flow(login=login, password=password)
 
         if "成功" in title:
-            # 断言：登录成功，URL 离开登录页
-            self.login_page.page.wait_for_url(lambda url: "/login" not in url, timeout=10000)
+            # 断言：登录成功，已进入首页（URL 离开 /login）
+            home_page.assert_on_home()
         else:
             # 断言：登录失败，仍停留在 /login
             assert "/login" in self.login_page.page.url, "登录失败时应停留在登录页"

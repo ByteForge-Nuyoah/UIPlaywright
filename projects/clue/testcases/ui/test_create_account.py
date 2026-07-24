@@ -10,6 +10,7 @@ import pytest
 from loguru import logger
 from playwright.sync_api import Page
 from pages.common_page import CommonPage
+from pages.account_page import AccountPage
 from config.global_vars import GLOBAL_VARS
 from utils.files_utils.yaml_handle import YamlHandle
 
@@ -60,7 +61,7 @@ class TestCreateAccount:
         # 操作步骤：经左侧菜单进入账号管理页 → 输入手机号/姓名/用户名/密码 → 提交创建账号表单
         account_page = (
             self.common_page
-            .goto_account_management()
+            .goto(AccountPage, CommonPage.locator_menu_account_management)
             .create_account_flow(phone=phone, name=name, user_name=user_name, password=password)
         )
 

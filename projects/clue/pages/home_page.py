@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : home_page.py
 # @Desc    : 登录成功后的入口页
 
 import allure
@@ -11,7 +10,6 @@ from utils.base_utils.base_page import BasePage
 class HomePage(BasePage):
     """
     系统首页（登录成功后的着陆页 /welcome）。
-    只封装首页自身的内容；左侧菜单等跨页共享布局与导航见 CommonPage。
     """
 
     # 顶部用户信息（登录成功后会出现，可用于校验登录态）

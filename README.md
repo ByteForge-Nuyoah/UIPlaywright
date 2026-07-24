@@ -12,7 +12,7 @@
 - **YAML 数据驱动**：测试数据放在 `projects/<project>/data/*.yaml`，测试代码只表达流程。
 - **UI + API 混合测试**：UI 用例在 `testcases`，接口定义在 `interfaces/*.yml`。
 - **Allure 报告**：支持生成 `outputs/report/allure_html`、压缩报告 `outputs/report/autotest_report.zip`。
-- **录制脚本转换工具**：Playwright codegen 录制统一放 `projects/<project>/recordings/`，由 `convert_recordings.py` 批量转换为 Page Object + data YAML + testcase 三件套；录制文件本身是完整 codegen 测试，可被 `run.py -recording raw` 直接运行。
+- **录制脚本转换工具**：Playwright codegen 录制统一放 `projects/<project>/files/*.md`，由 `convert_recordings.py` 批量转换为 Page Object + data YAML + testcase 三件套；转换器对 `set_input_files`/`goto`/`exact=True` 等已自动处理，`#el-id-*` 自动 ID 等不稳定定位器会标 TODO 提示手工补全。
 - **Docker 运行**：提供 `Dockerfile`、`.dockerignore`，基于官方 Playwright Python 镜像。
 
 ## 二、项目结构
@@ -65,11 +65,11 @@ uiPlaywright/
 │   ├── notify_utils/             # 邮件、钉钉、企业微信通知
 │   └── tools/
 │       ├── po_style_converter.py # 录制片段转 Page/data/testcase 三件套（单文件）
-│       ├── convert_recordings.py # 扫描 recordings/ 批量转 POM 三件套（推荐）
+│       ├── convert_recordings.py # 扫描 projects/<项目>/files/*.md 批量转 POM 三件套（推荐）
 │       ├── recording_to_basepage.py # 录制转函数式 BasePage 脚本
 │       ├── script_converter.py
 │       └── raw_script_converter.py
-├── files/clue/crm.md             # 录制片段示例
+├── files/                         # 测试资源附件（如 1.jpeg 等上传文件）；codegen 录制源在 projects/<项目>/files/*.md
 ├── outputs/                      # 测试产物：日志、报告、trace、压缩包
 ├── Dockerfile
 ├── .dockerignore
@@ -123,18 +123,18 @@ cp config/env/.env.example config/env/.env
 | `-mode` | 浏览器模式 | `headed` | `headless`, `headed` |
 | `-browser` | 浏览器类型 | `chromium` | `chromium`, `firefox`, `webkit` |
 | `-report` | 是否生成并打开 Allure 报告 | `yes` | `yes`, `no` |
-| `-m` | pytest marker 筛选 | 无 | `login`, `account`, `data`, `vehicle`, `export_record`, `api`, `recordings` |
+| `-m` | pytest marker 筛选 | 无 | `login`, `account`, `data`, `vehicle`, `export`, `api`, `recordings` |
 | `-path` | 指定测试文件或目录 | 无 | 任意 pytest 路径 |
 | `-video` | 视频录制 | `off` | `on`, `off`, `retain-on-failure` |
 | `-screenshot` | 截图策略 | `on` | `on`, `off`, `only-on-failure` |
 | `-tracing` | trace 策略 | `retain-on-failure` | `on`, `off`, `retain-on-failure` |
-| `-recording` | 录制运行模式 | `converted` | `converted`(跑 testcases), `raw`(跑 recordings/), `all`(两者) |
+| `-recording` | 录制运行模式 | `converted` | `converted`(跑 testcases), `raw`/`all`(legacy，recordings/ 已弃用) |
 
 ### 常用命令
 
 ```bash
 # 默认运行 clue/test，headed 模式，并生成报告
-python run.py
+python run.py -project clue
 
 # 推荐本地快速验证：headless，不生成报告
 python run.py -project clue -env test -mode headless -browser chromium -report no
@@ -155,10 +155,10 @@ python run.py -project clue -env test -mode headless -report no -m vehicle
 python run.py -project clue -env test -mode headless -report no -m export
 
 # 直接跑原始 codegen 录制（不经 POM 转换，需录制含 page.goto 自包含导航）
-python run.py -project crm -recording raw -report no
+python run.py -project clue -recording raw -report no
 
 # 同时跑 POM 用例和原始录制
-python run.py -project crm -recording all -report no
+python run.py -project clue -recording all -report no
 ```
 
 ## 五、Allure 报告
@@ -288,22 +288,23 @@ python run.py -m api -report no
 
 ## 十、录制脚本转换工具
 
-### 推荐流程：`recordings/` + `convert_recordings.py`（批量，推荐）
+### 推荐流程：`files/*.md` + `convert_recordings.py`（批量，推荐）
 
-Playwright codegen 录制统一放在 `projects/<project>/recordings/<base>.py`，文件为完整 codegen
-测试（`def test_<base>(page): ...`），一物两用：`run.py -recording raw` 直接跑原始录制，
-`convert_recordings.py` 批量转 POM 三件套。
+Playwright codegen 录制片段保存为 `projects/<project>/files/<base>.md`（可含 `# 标题`、
+`def test_xxx` 包裹，转换器自动剥离非 `page.` 行）。运行 `convert_recordings.py` 批量转 POM 三件套，
+已存在目标默认跳过以防覆盖手工修复，`--force` 强制重生。
 
 ```bash
-# 扫描 recordings/ 转 POM 三件套（已存在默认跳过，--force 强转）
+# 扫描 files/*.md 转 POM 三件套（已存在默认跳过，--force 强转）
 python utils/tools/convert_recordings.py
 python utils/tools/convert_recordings.py --project crm
-python utils/tools/convert_recordings.py --project crm --file my_account
+python utils/tools/convert_recordings.py --project crm --file createAccount
 python utils/tools/convert_recordings.py --project crm --force
 ```
 
-命名约定：`recordings/my_account.py` -> `MyAccountPage` / `pages/my_account_page.py` /
-`data/my_account.yaml` / `testcases/test_my_account.py`。
+命名约定：`files/my_account.md` -> `MyAccountPage` / `pages/my_account_page.py` /
+`data/my_account.yaml` / `testcases/test_my_account.py`（`<base>` 即文件名去扩展名，
+想要 `my_account_page.py` 就把录制命名为 `my_account.md`）。
 
 ### 单文件转换：`po_style_converter.py`
 
@@ -327,7 +328,7 @@ page.get_by_role("textbox", name="页").press("Enter")
 
 ```bash
 python utils/tools/po_style_converter.py \
-  --input files/clue/crm.md \
+  --input projects/clue/files/clue.md \
   --class-name ExportRecordPage \
   --file-name export_page.py \
   --suite-dir projects/clue \
@@ -338,7 +339,7 @@ python utils/tools/po_style_converter.py \
 生成结果：
 
 ```text
-projects/clue/pages/export_record/export_record_page.py
+projects/clue/pages/export/export_page.py
 projects/clue/data/export_record.yaml
 projects/clue/testcases/test_export_record.py
 ```
@@ -347,7 +348,7 @@ projects/clue/testcases/test_export_record.py
 
 ```bash
 python utils/tools/po_style_converter.py \
-  --input files/clue/crm.md \
+  --input projects/clue/files/clue.md \
   --class-name ExportRecordPage \
   --file-name export_page.py \
   --output projects/clue/pages/export/export_page.py
@@ -360,9 +361,12 @@ python utils/tools/po_style_converter.py \
 1. **菜单图标 + 文本**：如 `to-top 导出记录` 可能需要改为 `导出记录`。
 2. **日期选择器**：建议限定在当前可见的 `.ant-picker-dropdown` 内。
 3. **Popover/Modal**：导出、确认弹窗类操作需要确认真实 DOM。
-4. **无法逐行映射的动作**：`set_input_files` / `page.goto` / `get_by_role(..., exact=True)`
-   等会留 `# TODO`，需手工补全（如头像上传改挂隐藏 `input[type=file]`）；正因如此
-   `convert_recordings.py` 默认跳过已存在目标以保护手工修复，`--force` 才覆盖。
+4. **仍需手工补全的动作**：转换器已自动处理 `set_input_files`（-> `upload_file`）、
+   `page.goto`（静默跳过，导航归用例 setup）、`get_by_role(..., exact=True)`、相邻试错 fill
+   合并取末值、退键 `press` 丢弃、连续重复 `click` 去重。但 `get_by_label().get_by_text()` 等
+   链式定位、`#el-id-*` 自动 ID 会留 `# TODO`，且 el-select 下拉、头像上传等需按真实 DOM 校验
+   （如头像实际是点 `figure.avatar` 挂隐藏 `input[type=file]`）；正因如此 `convert_recordings.py`
+   默认跳过已存在目标以保护手工修复，`--force` 才覆盖。
 5. **marker**：在项目 `conftest.py` 的 `pytest_configure` 注册（非 `pytest.ini`）；crm 已支持
    自动扫描 `test_*.py` 的 `@pytest.mark.xxx`，新增用例无需手改。
 6. **补断言**：录制脚本多为操作步骤，建议在关键业务节点补充断言。
@@ -373,7 +377,7 @@ python utils/tools/po_style_converter.py \
 - `utils/tools/script_converter.py`：完整 pytest 脚本转换。
 - `utils/tools/raw_script_converter.py`：原始操作序列转换。
 
-后续新录制优先用 `recordings/` + `convert_recordings.py`。
+后续新录制优先用 `files/*.md` + `convert_recordings.py`。
 
 ## 十一、多环境配置与使用
 

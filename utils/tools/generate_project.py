@@ -29,7 +29,7 @@ import shutil
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECTS_DIR = os.path.join(BASE_DIR, "projects")
 # 通用项目级 conftest 的来源（已去项目名硬编码，可零改动复用到任意项目）
-REFERENCE_CONFTEST = os.path.join(PROJECTS_DIR, "clue", "testcases", "conftest.py")
+REFERENCE_CONFTEST = os.path.join(PROJECTS_DIR, "crm", "testcases", "conftest.py")
 
 
 # ------------------------------------ 模板（用 __NAME__ 等占位符，render() 统一替换）------------------------------------#
@@ -217,7 +217,7 @@ class TestLogin:
         """
         网页登录：输入用户名密码并提交。
         TODO: 定位器（login_page.py）与登录后跳转路径填好后，按实际情况补充成功/失败断言
-              （可参照 projects/clue/testcases/test_login.py 的写法）
+              （可参照 projects/crm/testcases/ui/test_login.py 的写法）
         """
         login = case.get("login")
         password = case.get("password")
@@ -329,7 +329,7 @@ def main():
         print(f"项目已存在: {project_dir}（如需重新生成请先删除）")
         sys.exit(1)
     if not os.path.exists(REFERENCE_CONFTEST):
-        print(f"参考 conftest 不存在: {REFERENCE_CONFTEST}（脚手架依赖 clue 的通用 conftest）")
+        print(f"参考 conftest 不存在: {REFERENCE_CONFTEST}（脚手架依赖 crm 的通用 conftest）")
         sys.exit(1)
 
     # 1. 建目录（interfaces 在项目根，不在项目目录下；testcases 下分 api/ui 子目录）
@@ -339,7 +339,7 @@ def main():
 
     # 2. 拷贝通用项目级 conftest（已去硬编码，零改动复用）
     shutil.copyfile(REFERENCE_CONFTEST, os.path.join(project_dir, "testcases", "conftest.py"))
-    print(f"生成: projects/{name}/testcases/conftest.py  (拷贝自 clue)")
+    print(f"生成: projects/{name}/testcases/conftest.py  (拷贝自 crm)")
 
     # 3. 渲染模板文件（写到项目目录）
     writes = [

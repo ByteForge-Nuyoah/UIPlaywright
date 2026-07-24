@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : export_page.py
-# @Software: PyCharm
 # @Desc    : 导出记录
 
 import allure
