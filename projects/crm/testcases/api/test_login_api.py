@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : test_login_api.py
-# @Software: PyCharm
 # @Desc    : CRM 登录接口用例
 
 import os
@@ -20,10 +18,6 @@ class TestLoginApi:
     """CRM 登录接口"""
 
     def test_crm_login_api(self, playwright: Playwright):
-        """
-        验证 crm_login.yml 可被 RequestControl 正常加载执行，
-        并确认 headers.Origin 中的 ${url} 已按当前环境替换。
-        """
         api_request_context = playwright.request.new_context(base_url=GLOBAL_VARS["host"])
         try:
             result = RequestControl(api_request_context=api_request_context).api_request_flow(

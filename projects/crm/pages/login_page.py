@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : login_page.py
-# @Software: PyCharm
 # @Desc    : CRM 登录页
 
 import allure

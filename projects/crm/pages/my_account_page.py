@@ -11,7 +11,6 @@ class MyAccountPage(BasePage):
     """
     CRM 我的账号页：编辑真实姓名/手机号/邮箱/头像、更新基本信息。
     """
-
     # 表单输入框：ant-design Form 的 label 文本定位
     locator_input_real_name = "xpath=//label[contains(normalize-space(), '真实姓名')]//following::input[1]"
     # 录制为 get_by_role("textbox", name="手机号", exact=True)，转换器未识别 exact=True，手工补
@@ -61,8 +60,7 @@ class MyAccountPage(BasePage):
     @allure.step("我的账号-更新基本信息流程")
     def my_account_update_flow(self, case):
         """
-        还原 codegen 录制的我的账号编辑流程：输入真实姓名 -> 输入手机号
-        -> 输入邮箱 -> 上传头像 -> 确定 -> 更新基本信息。
+        我的账号编辑流程：输入真实姓名 -> 输入手机号-> 输入邮箱 -> 上传头像 -> 确定 -> 更新基本信息。
         """
         (self
          .input_real_name(case.get("real_name", "超级管理员 1 2"))

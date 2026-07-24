@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : home_page.py
-# @Software: PyCharm
 # @Desc    : CRM 登录成功后的入口页（根路径 /）
 
 import re

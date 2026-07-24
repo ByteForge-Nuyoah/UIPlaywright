@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : test_login.py
-# @Software: PyCharm
 # @Desc    : CRM 登录功能测试用例
 
 import os
-
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-
 from pages.login_page import LoginPage
 from utils.files_utils.yaml_handle import YamlHandle
 
@@ -37,18 +33,16 @@ class TestLogin:
     @pytest.mark.parametrize("case", cases["user_with_phone_page"], ids=lambda x: x["title"])
     def test_login_user(self, case):
         """
-        网页登录：输入用户名密码并提交，按用例标题分支断言登录成功/失败。
-        - 标题含「成功」：进入首页（URL 离开 /login）
-        - 标题含「失败」：仍停留在 /login
+        网页登录：输入用户名密码并提交
         """
         login = case.get("login")
         password = case.get("password")
         title = case.get("title", "")
-        # 操作步骤：登录页输入用户名及密码，点击【登录】按钮，提交登录表单 -> 返回首页
+        # 操作步骤：登录页输入用户名及密码，点击登录按钮，提交登录表单 -> 返回首页
         home_page = self.login_page.login_on_page_flow(login=login, password=password)
 
         if "成功" in title:
-            # 断言：登录成功，已进入首页（URL 离开 /login）
+            # 断言：登录成功，已进入首页
             home_page.assert_on_home()
         else:
             # 断言：登录失败，仍停留在 /login

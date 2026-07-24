@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : common_page.py
-# @Software: PyCharm
 # @Desc    : 跨页面通用页面对象：登录态布局壳（顶部头像）与跨页导航
 
 import re
@@ -13,16 +11,11 @@ from utils.base_utils.base_page import BasePage
 class CommonPage(BasePage):
     """
     跨页面通用页面对象：登录后所有页面共享的布局壳元素与跨页导航。
-    - 顶部：用户头像区（登录成功后出现，可用于校验登录态）
-    - 跨页导航：通过 goto(page_cls, *targets) 通用跳转，新增页面无需在本类加方法，
-      只需把新的菜单/入口定位器作为类属性补一行即可。
-
     继承 BasePage，直接复用 assert_element_visible 等通用断言方法。
     """
-
-    # 顶部用户头像区（登录成功后出现，可用于校验登录态），需按真实 DOM 校验
+    # 顶部用户头像区
     locator_avatar = ".ant-pro-global-header-header-actions-avatar"
-    # 「我的账号」入口（登录后首页顶部，点击进入个人账号编辑页）
+    # 我的账号」入口
     locator_entry_my_account = "xpath=//div[normalize-space()='我的账号']"
     # 侧边菜单「账号」项（点击进入账号管理列表页）；用 normalize-space 精确匹配，排除「我的账号」
     locator_menu_account = "xpath=//li[contains(@class,'sub-menu') and normalize-space()='账号']"

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : create_account_page.py
-# @Software: PyCharm
 # @Desc    : CRM 创建账号页（账号管理 -> 创建账号 弹窗表单，Element Plus）
 
 import allure
@@ -11,17 +9,8 @@ from utils.base_utils.base_page import BasePage
 
 class CreateAccountPage(BasePage):
     """
-    CRM 创建账号页：账号管理列表页的「创建账号」弹窗表单（Element Plus）。
-    录制源：files/crm/createAccount.md
-
-    定位说明：
-    - 输入框用 el-form-item label 文本定位（label-following-input）；密码/确认密码 label
-      分别精确匹配，避免互相误命中；
-    - 品牌/角色为 el-select，录制用的 #el-id-* 自动 ID 每次会话都变（不稳定），改用
-      form-item 限定下的 .el-select__wrapper 触发器 + get_by_role(option) 选项；
-    - 提交结果（成功/失败）以 .el-message__content 全局提示或账号列表内容断言。
+    CRM 创建账号页：账号管理列表页的「创建账号」弹窗表单
     """
-
     # 账号管理列表页的「创建账号」按钮
     locator_btn_create = "xpath=//button[span[normalize-space()='创建账号'] or normalize-space()='创建账号']"
     # 表单输入框（Element Plus el-form-item label 文本定位）
@@ -37,11 +26,6 @@ class CreateAccountPage(BasePage):
     locator_msg = ".el-message__content"
 
     def _select_el_option(self, field, option):
-        """
-        Element Plus el-select 选择：点击 form-item 内的 .el-select__wrapper 打开下拉，
-        再用 role=option 精确点击选项（选项 popper teleport 到 body，仅可见项可点）。
-        录制中的 #el-id-* 自动 ID 不稳定，故按 label 限定 form-item 后定位 wrapper。
-        """
         wrapper = (f"//div[contains(@class,'el-form-item') and "
                    f".//label[normalize-space()='{field}']]//div[contains(@class,'el-select__wrapper')]")
         self.click(wrapper)
@@ -110,8 +94,6 @@ class CreateAccountPage(BasePage):
     def assert_create_success(self, user_name):
         """
         断言创建成功：弹窗关闭 + 账号列表出现新用户名。
-        注意：当前 admin 账号「为下一级创建管理员」配额已满，成功路径暂不可用，
-        需换用有可用配额的管理员账号才能走通。
         """
         self.assert_element_hidden(self.locator_btn_confirm, timeout=8000)
         self.assert_element_visible(f"text={user_name}")
@@ -121,14 +103,7 @@ class CreateAccountPage(BasePage):
     @allure.step("创建账号流程")
     def create_account_flow(self, case):
         """
-        还原 codegen 录制的创建账号流程：打开创建表单 -> 输入用户名/真实姓名/手机号/邮箱
-        -> 选择品牌商/角色 -> 输入密码/确认密码 -> 提交。
-
-        录制中的试错冗余已合并省略：
-        - 用户名：fill + Enter + 改 fill，取最终值，单次 input 即可；
-        - 邮箱：fill + Enter + 重复 fill，取最终值，单次 input 即可；
-        - 密码：录制先输错确认密码导致不一致（qwer@!123 vs qwer@123），已统一为相同密码；
-        - 品牌商：录制先选「小镜」后改「1112」，取最终值「1112」。
+        完整流程
         """
         password = case.get("password", "")
         (self

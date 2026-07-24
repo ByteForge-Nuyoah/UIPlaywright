@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : test_my_account.py
-# @Software: PyCharm
-# @Desc    : CRM 我的账号-更新基本信息用例
+# @Desc    : 我的账号
 
 import os
 
 import pytest
 from loguru import logger
 from playwright.sync_api import Page
-
-from config.global_vars import GLOBAL_VARS
 from pages.common_page import CommonPage
+from config.global_vars import GLOBAL_VARS
 from pages.my_account_page import MyAccountPage
 from utils.files_utils.yaml_handle import YamlHandle
 

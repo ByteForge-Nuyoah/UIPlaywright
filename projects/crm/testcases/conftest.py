@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : conftest.py
-# @Software: PyCharm
 # @Desc    : 项目级 fixture：UI 预登录 + storage_state 注入
 
 import os
@@ -50,12 +48,6 @@ def _discover_project_markers(testcases_dir):
 
 
 def pytest_configure(config):
-    """注册 markers：固定分类 + 自动扫描 testcases/test_*.py 中的 @pytest.mark.xxx。
-
-    固定列表保留 login/api/recordings 等分类 marker（即便尚无对应 test 文件也注册）；
-    其余特性 marker（如 my_account 及后续新增录制的 <base>）由扫描自动注册，
-    新增页面/录制无需再手改本文件。
-    """
     fixed = [
         "login: login cases",
         "api: api interface cases",
@@ -84,7 +76,6 @@ STORAGE_STATE_TTL = 3600
 def _jwt_exp(token):
     """
     解码 JWT token 的 payload，返回 exp（过期时间戳）；非 JWT 或无 exp 返回 None。
-    仅解码不验签（用于本地过期判断，非安全校验）。
     """
     if not isinstance(token, str):
         return None
@@ -102,8 +93,7 @@ def _jwt_exp(token):
 
 def is_storage_state_valid(state_path, ttl=STORAGE_STATE_TTL):
     """
-    检查 storage_state 文件是否仍有效（可复用）。
-    优先解码 localStorage 中 JWT token 的 exp；无 JWT 则用文件 mtime + ttl 兜底。
+    检查 storage_state 文件是否仍有效
     :return: True 有效可复用 / False 需重新登录
     """
     if not os.path.exists(state_path):

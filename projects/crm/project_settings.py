@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : project_settings.py
-# @Software: PyCharm
 # @Desc    : CRM 项目配置
 
 import os
@@ -40,7 +38,7 @@ ENV_VARS = {
         "admin_user_password": os.getenv("CRM_ADMIN_PASSWORD", ""),
     },
     "prod": {
-        # TODO: 待补 prod 环境域名
+        # 生产环境域名
         "url": "https://workspace.spreadwin.cn",
         "host": "https://crmapi.spreadwin.cn",
         "admin_user_name": os.getenv("CRM_ADMIN_USER", ""),
