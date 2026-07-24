@@ -1,0 +1,17 @@
+# 场景：CRM 创建账号
+# 数据来源：files/crm/createAccount.md 录制脚本
+# 注意：当前 admin 账号已用尽「为下一级创建一个管理员账号」配额，提交后返回业务错误
+# 「只能为下一级创建一个账号作为管理员」，故默认用例断言该错误（失败分支）。
+# 若后续使用有可用配额的管理员账号，可追加 title 含「成功」的用例（测试会自动用随机用户名/手机号）。
+create_account_cases:
+  - title: "创建账号-管理员配额已满提交被拒"
+    run: true
+    user_name: "nideye"
+    real_name: "你大爷"
+    phone: "12345678910"
+    email: "1247@qq.com"
+    brand: "1112"
+    role: "渠道管理员"
+    password: "qwer@123"
+    confirm_password: "qwer@123"
+    error_keyword: "只能为下一级创建一个账号作为管理员"
