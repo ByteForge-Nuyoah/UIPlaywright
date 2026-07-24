@@ -19,13 +19,13 @@ class TestLoginApi:
 
     def test_clue_login_api(self, playwright: Playwright):
         """
-        验证 clue_login.yml 可被 RequestControl 正常加载执行，
+        验证 clue_login.txt 可被 RequestControl 正常加载执行，
         并确认 headers.Origin 中的 ${url} 已按当前环境替换。
         """
         api_request_context = playwright.request.new_context(base_url=GLOBAL_VARS["host"])
         try:
             result = RequestControl(api_request_context=api_request_context).api_request_flow(
-                api_file_path=os.path.join(INTERFACE_DIR, "clue_login.yml"),
+                api_file_path=os.path.join(INTERFACE_DIR, "clue_login.txt"),
                 key="clue_login",
                 global_var={
                     "url": GLOBAL_VARS["url"],

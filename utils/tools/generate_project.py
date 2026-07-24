@@ -8,7 +8,7 @@
 """
 按项目名在 projects/<name>/ 下生成登录骨架，包含：
   project_settings.py / data/login_data.yaml / interfaces/<name>_login.yml（项目根，各项目按文件名隔离）
-  pages/login_page.py / testcases/conftest.py / testcases/ui/test_login.py / testcases/api/test_login_api.py
+  pages/login_page.py / testcases/conftest.py / testcases/ui/test_login.py / testcases/api/test_login_api.txt
 
 用法：
   python utils/tools/generate_project.py <项目名>
@@ -229,7 +229,7 @@ class TestLogin:
 TEST_LOGIN_API_TPL = '''# -*- coding: utf-8 -*-
 # @Version: Python 3.13
 # @Author  : 会飞的🐟
-# @File    : test_login_api.py
+# @File    : test_login_api.txt
 # @Software: PyCharm
 # @Desc    : __NAME__ 登录接口用例
 
@@ -346,7 +346,7 @@ def main():
         ("project_settings.py", render(PROJECT_SETTINGS_TPL, name)),
         ("pages/login_page.py", render(LOGIN_PAGE_TPL, name)),
         ("testcases/ui/test_login.py", render(TEST_LOGIN_TPL, name)),
-        ("testcases/api/test_login_api.py", render(TEST_LOGIN_API_TPL, name)),
+        ("testcases/api/test_login_api.txt", render(TEST_LOGIN_API_TPL, name)),
         ("data/login_data.yaml", render(LOGIN_DATA_TPL, name)),
         ("pages/__init__.py", render(INIT_TPL, name)),
         ("testcases/__init__.py", render(INIT_TPL, name)),

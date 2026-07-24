@@ -16,7 +16,7 @@ ENV_VARS = {
         # API 登录接口配置（供 testcases/conftest.py 的 api_session_setup 使用）；
         # file 相对项目根 interfaces/ 目录，var_map 把 GLOBAL_VARS 字段映射成接口 payload 变量名
         "login_api": {
-            "file": "crm_login.yml",
+            "file": "crm_login.txt",
             "key": "crm_login",
             "var_map": {
                 "username": "admin_user_name",

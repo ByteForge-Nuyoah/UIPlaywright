@@ -276,7 +276,7 @@ def test_login_user(self, case):
 
 ### 登录 API
 
-- Interface：`interfaces/clue_login.yml`
+- Interface：`interfaces/clue_login.txt`
 - Test：`projects/clue/testcases/test_login_api.py`
 - Marker：`api`
 
