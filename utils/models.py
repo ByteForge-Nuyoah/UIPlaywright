@@ -21,7 +21,8 @@ class NotificationType(Enum):
     DING_TALK = 1
     WECHAT = 2
     EMAIL = 3
-    ALL = 4
+    FEISHU = 4
+    ALL = 5
 
 
 @unique  # 枚举类装饰器，确保只有一个名称绑定到任何一个值。
