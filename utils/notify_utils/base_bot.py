@@ -28,12 +28,12 @@ class BaseNotifyBot:
 
     def send_message(self, payload, timeout=None):
         """
-        发送消息：POST webhook，按 errcode 判定成功与否。
+        发送消息：POST webhook，按响应码判定成功与否。
         :param payload: 请求 json 数据
         :param timeout: 超时秒数；为 None 时用实例 timeout（默认 10）
         :return: True 成功 / False 失败
         """
-        msgtype = payload.get("msgtype", "") if isinstance(payload, dict) else ""
+        msgtype = (payload.get("msgtype") or payload.get("msg_type") or "") if isinstance(payload, dict) else ""
         logger.debug("\n================ 发送机器人消息 ================\n"
                      f"Webhook_Url: {mask_webhook_url(self.webhook_url)}\n"
                      f"内容: {payload}\n")
@@ -49,9 +49,17 @@ class BaseNotifyBot:
         except Exception as e:
             logger.error(f"发送{msgtype}消息异常或响应非JSON：{e}")
             return False
-        if resp_json.get("errcode") == 0:
+        if self._is_success(resp_json):
             logger.debug("\n=============== 发送机器人消息 ===============\n"
                          f"发送{msgtype}消息成功：{resp_json}\n")
             return True
         logger.error(f"发送{msgtype}消息失败：{response.text}")
         return False
+
+    def _is_success(self, resp_json):
+        """
+        判断响应是否成功。不同平台成功标识字段不同，子类可重写。
+        :param resp_json: 接口响应 JSON
+        :return: True 成功 / False 失败
+        """
+        return resp_json.get("errcode") == 0
