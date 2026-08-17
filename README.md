@@ -208,7 +208,7 @@ docker run --rm \
   python run.py -project clue -env test -mode headless -browser chromium -report no -m export
 ```
 
-> `.dockerignore` 已排除 `.auth/`、`outputs/`、`.env`、`.omc/`、`.claude/`、本地缓存和报告产物，避免把敏感信息和运行产物打进镜像。
+> `.dockerignore` 已排除 `.auth/`、`outputs/`、`config/env/.env`、`.omc/`、`.claude/`、本地缓存和报告产物，避免把敏感信息和运行产物打进镜像。
 
 ## 七、使用增强断言
 
