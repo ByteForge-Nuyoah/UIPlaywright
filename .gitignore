@@ -38,7 +38,7 @@ playwright-report/
 
 # Local env / secrets
 config/env/.env
-.env
+config/env/.env
 .env.*
 !.env.example
 !config/env/.env.example

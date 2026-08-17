@@ -36,7 +36,7 @@ playwright/.cache/
 *.tar.gz
 
 # Local env / secrets
-.env
+config/env/.env
 .env.*
 config/env/.env
 
