@@ -8,10 +8,11 @@ from utils.models import NotificationType
 from utils.data_utils.data_handle import data_handle
 from utils.notify_utils.wechat_bot import WechatBot
 from utils.notify_utils.dingding_bot import DingTalkBot
+from utils.notify_utils.feishu_bot import FeishuBot
 from utils.notify_utils.yagmail_bot import YagEmailServe
 from utils.report_utils.get_results_handle import get_test_results_from_allure_report
-from config.settings import SEND_RESULT_TYPE, email, ding_talk, wechat, email_subject, email_content, ding_talk_title, \
-    ding_talk_content, wechat_content
+from config.settings import SEND_RESULT_TYPE, email, ding_talk, wechat, feishu, email_subject, email_content, \
+    ding_talk_title, ding_talk_content, wechat_content, feishu_content
 
 def send_email(user, pwd, host, subject, content, to, attachments):
     """
@@ -66,6 +67,21 @@ def send_wechat(webhook_url, content, attachment=None):
         logger.error(f"发送企业微信通知异常， 错误信息：{e}")
 
 
+def send_feishu(webhook_url, secret, content):
+    """
+    发送飞书消息
+    """
+    try:
+        feishu = FeishuBot(webhook_url=webhook_url, secret=secret)
+        res = feishu.send_text(content)
+        if res:
+            logger.info(f"发送飞书通知成功~")
+        else:
+            logger.error(f"发送飞书通知失败~")
+    except Exception as e:
+        logger.error(f"发送飞书通知异常， 错误信息：{e}")
+
+
 def send_result(report_info: dict, report_path: str, attachment_path: str = None):
     """
     发送测试结果通知
@@ -114,6 +130,14 @@ def send_result(report_info: dict, report_path: str, attachment_path: str = None
                 'webhook_url': wechat["webhook_url"],
                 'content': wechat_content,
                 'attachment': attachment_path,
+            }
+        },
+        NotificationType.FEISHU.value: {
+            'sender': send_feishu,
+            'sender_args': {
+                'webhook_url': feishu["webhook_url"],
+                'secret': feishu["secret"],
+                'content': feishu_content,
             }
         }
     }
