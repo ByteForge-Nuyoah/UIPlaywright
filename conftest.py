@@ -67,7 +67,7 @@ def pytest_configure(config):
     pytest 钩子函数：初始化配置
     """
     from dotenv import load_dotenv
-    _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', '.env')
+    _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', 'config/env/.env')
     load_dotenv(_env_path)
     config.option.base_url = GLOBAL_VARS.get("host")
 
