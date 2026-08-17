@@ -28,7 +28,7 @@ import time
 import pytest
 from loguru import logger
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', '.env'))
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', 'env', 'config/env/.env'))
 from config.settings import LOG_INFO, RunConfig
 from config.config_path import BASE_DIR, REPORT_DIR, TRACING_DIR, ALLURE_RESULTS_DIR, \
     ALLURE_HTML_DIR, AUTH_DIR, LIB_DIR
