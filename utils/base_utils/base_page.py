@@ -232,6 +232,58 @@ class BasePage:
         logger.info(f"--> 拖拽元素 | 源：{source}，目标：{target}")
         self.page.drag_and_drop(source, target)
 
+    @allure.step("--> 滑动验证码 | 滑块：{slider_locator}，横向距离：{distance}")
+    def slide_captcha(
+        self,
+        slider_locator: str,
+        distance: float,
+        steps: int = 15,
+        step_delay: int = 60,
+    ) -> None:
+        """
+        从滑块中心按指定横向距离完成验证码拖动。
+
+        :param slider_locator: 滑块元素定位
+        :param distance: 横向滑动距离（像素），正数向右、负数向左
+        :param steps: 鼠标移动拆分步数，默认 15
+        :param step_delay: 每步等待时间（毫秒），默认 60
+        """
+        if steps <= 0:
+            raise ValueError("steps 必须大于 0")
+        if step_delay < 0:
+            raise ValueError("step_delay 不能小于 0")
+
+        slider = self.page.locator(slider_locator)
+        slider.wait_for(state="visible")
+        box = slider.bounding_box()
+        if box is None:
+            raise RuntimeError(f"无法获取滑块元素的可见坐标：{slider_locator}")
+
+        start_x = box["x"] + box["width"] / 2
+        start_y = box["y"] + box["height"] / 2
+        logger.info(
+            f"--> 滑动验证码 | 滑块：{slider_locator}，"
+            f"起点：({start_x}, {start_y})，横向距离：{distance}，步数：{steps}"
+        )
+        vertical_offsets = (0, 1, 2, 1, 0, -1, -2, -1)
+        self.page.mouse.move(start_x, start_y)
+        self.page.mouse.down()
+        try:
+            for current_step in range(1, steps + 1):
+                progress = current_step / steps
+                offset_y = vertical_offsets[current_step % len(vertical_offsets)]
+                self.page.mouse.move(
+                    start_x + distance * progress,
+                    start_y + offset_y,
+                )
+                if step_delay:
+                    self.page.wait_for_timeout(step_delay)
+            self.page.mouse.move(start_x + distance, start_y + 1)
+            if step_delay:
+                self.page.wait_for_timeout(step_delay)
+        finally:
+            self.page.mouse.up()
+
     @allure.step("--> 滚动元素至可视区 | 元素定位：{locator}")
     def scroll_into_view(self, locator: str) -> None:
         """
