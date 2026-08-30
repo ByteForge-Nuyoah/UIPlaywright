@@ -82,17 +82,33 @@ def send_feishu(webhook_url, secret, content):
         logger.error(f"发送飞书通知异常， 错误信息：{e}")
 
 
-def send_result(report_info: dict, report_path: str, attachment_path: str = None):
+def send_result(
+        report_info: dict,
+        report_path: str,
+        attachment_path: str = None,
+        notification_config: dict = None,
+):
     """
     发送测试结果通知
     :param report_info: 报告元数据 (测试人员、部门、环境等)
     :param report_path: Allure HTML 报告的根目录路径
     :param attachment_path: 附件路径 (通常是 zip 压缩包)
     """
+    notification_type = (
+        notification_config.get("type", SEND_RESULT_TYPE)
+        if notification_config
+        else SEND_RESULT_TYPE
+    )
+
     # 默认不发送任何通知
-    if SEND_RESULT_TYPE == NotificationType.DEFAULT.value:
-        logger.debug(f"SEND_RESULT_TYPE={SEND_RESULT_TYPE}， 配置了不发送任何邮件")
+    if notification_type == NotificationType.DEFAULT.value:
+        logger.debug(f"SEND_RESULT_TYPE={notification_type}， 配置了不发送任何邮件")
         return
+
+    configured_feishu = notification_config.get("feishu", {}) if notification_config else {}
+    configured_ding_talk = notification_config.get("ding_talk", {}) if notification_config else {}
+    configured_wechat = notification_config.get("wechat", {}) if notification_config else {}
+    configured_email = notification_config.get("email", {}) if notification_config else {}
 
     # 从 Allure 报告中提取统计信息 (passed, failed, duration 等)
     results = get_test_results_from_allure_report(report_path)
@@ -106,20 +122,20 @@ def send_result(report_info: dict, report_path: str, attachment_path: str = None
         NotificationType.EMAIL.value: {
             'sender': send_email,
             'sender_args': {
-                'user': email.get("user"),
-                'pwd': email.get("password"),
-                'host': email.get("host"),
+                'user': configured_email.get("user", email.get("user")),
+                'pwd': configured_email.get("password", email.get("password")),
+                'host': configured_email.get("host", email.get("host")),
                 'subject': email_subject,
                 'content': email_content,
-                'to': email.get("to"),
+                'to': configured_email.get("to", email.get("to")),
                 'attachments': attachment_path,
             }
         },
         NotificationType.DING_TALK.value: {
             'sender': send_dingding,
             'sender_args': {
-                'webhook_url': ding_talk["webhook_url"],
-                'secret': ding_talk["secret"],
+                'webhook_url': configured_ding_talk.get("webhook_url", ding_talk["webhook_url"]),
+                'secret': configured_ding_talk.get("secret", ding_talk["secret"]),
                 'title': ding_talk_title,
                 'content': ding_talk_content,
             }
@@ -127,7 +143,7 @@ def send_result(report_info: dict, report_path: str, attachment_path: str = None
         NotificationType.WECHAT.value: {
             'sender': send_wechat,
             'sender_args': {
-                'webhook_url': wechat["webhook_url"],
+                'webhook_url': configured_wechat.get("webhook_url", wechat["webhook_url"]),
                 'content': wechat_content,
                 'attachment': attachment_path,
             }
@@ -135,15 +151,15 @@ def send_result(report_info: dict, report_path: str, attachment_path: str = None
         NotificationType.FEISHU.value: {
             'sender': send_feishu,
             'sender_args': {
-                'webhook_url': feishu["webhook_url"],
-                'secret': feishu["secret"],
+                'webhook_url': configured_feishu.get("webhook_url", feishu["webhook_url"]),
+                'secret': configured_feishu.get("secret", feishu["secret"]),
                 'content': feishu_content,
             }
         }
     }
     # 单一渠道发送消息
-    if SEND_RESULT_TYPE in notification_mappings:
-        notification = notification_mappings[SEND_RESULT_TYPE]
+    if notification_type in notification_mappings:
+        notification = notification_mappings[notification_type]
         # data_handle 函数用于将模板中的 ${key} 替换为 results 中的实际值
         notification['sender_args']['content'] = data_handle(obj=notification['sender_args']['content'],
                                                              source=results)
