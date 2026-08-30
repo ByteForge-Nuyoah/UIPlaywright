@@ -1,0 +1,6 @@
+login_cases:
+  - title: "密码登录并完成滑块验证"
+    login: "${admin_user_name}"
+    password: "${admin_user_password}"
+    captcha_distance: 167.4
+    run: true
