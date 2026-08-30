@@ -167,7 +167,12 @@ def _post_run_report(kwargs, env_vars):
             proc.terminate()
     else:
         logger.info("定时任务模式，跳过自动打开测试报告。")
-    send_result(report_info=env_vars["common"], report_path=report_path, attachment_path=attachment_path)
+    send_result(
+        report_info=env_vars["common"],
+        report_path=report_path,
+        attachment_path=attachment_path,
+        notification_config=env_vars["common"].get("notification"),
+    )
 
 
 def run(**kwargs):
