@@ -8,13 +8,6 @@ ENV_VARS = {
         "tester": "会飞的🐟",
         "department": "成都研发后台",
         "env": "test",
-        "notification": {
-            "type": 4,
-            "feishu": {
-                "webhook_url": os.getenv("FEISHU_WEBHOOK", ""),
-                "secret": os.getenv("FEISHU_SECRET", ""),
-            },
-        },
     },
     "test": {
         "url": "https://app.test.surgsmart.com",
