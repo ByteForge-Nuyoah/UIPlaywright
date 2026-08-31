@@ -1,0 +1,10 @@
+work_station_cases:
+  - title: "工作台-统计摘要"
+    assertion: "summary"
+    run: true
+  - title: "工作台-近期手术表格"
+    assertion: "recent_surgery_table"
+    run: true
+  - title: "工作台-统计日期范围"
+    assertion: "statistics_date_range"
+    run: true
