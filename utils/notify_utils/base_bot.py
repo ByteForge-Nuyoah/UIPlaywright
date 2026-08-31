@@ -5,7 +5,6 @@
 
 from loguru import logger
 from requests import request
-from utils.tools.sensitive_handle import mask_webhook_url
 
 
 class BaseNotifyBot:
@@ -34,9 +33,7 @@ class BaseNotifyBot:
         :return: True 成功 / False 失败
         """
         msgtype = (payload.get("msgtype") or payload.get("msg_type") or "") if isinstance(payload, dict) else ""
-        logger.debug("\n================ 发送机器人消息 ================\n"
-                     f"Webhook_Url: {mask_webhook_url(self.webhook_url)}\n"
-                     f"内容: {payload}\n")
+        logger.debug(f"准备发送{msgtype}机器人消息")
         try:
             response = request(
                 url=self.webhook_url,
