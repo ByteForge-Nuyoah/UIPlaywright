@@ -163,20 +163,20 @@ feishu = {
 }
 # ------------------------------------ 飞书通知内容 ----------------------------------------------------#
 feishu_content = """
-           自动化用例通知
-           自动化用例于 ${start_time} 开始运行，运行时长：${run_time} s， 目前已执行完成。
+           各位同事, 大家好:
+           ### 自动化用例于 ${start_time} 开始运行，运行时长：${run_time} s， 目前已执行完成。
            --------------------------------
-           测试人： ${tester}
-           所属部门： ${department}
-           项目环境： ${env}
+           #### 测试人： ${tester}
+           #### 所属部门： ${department}
+           #### 项目环境： ${env}
            --------------------------------
-           执行结果如下:
+           #### 执行结果如下:
            - 用例运行总数: ${total} 个
-           - 通过用例个数（passed）: ${passed} 个
-           - 失败用例个数（failed）: ${failed} 个
-           - 异常用例个数（error）: ${broken} 个
-           - 跳过用例个数（skipped）: ${skipped} 个
-           - 失败重试用例个数 * 次数之和（rerun）: ${rerun} 个
-           - 成  功   率: ${pass_rate} %
-           详细情况可查看测试报告， 非相关负责人员可忽略此消息。谢谢。
+           - 通过用例个数（passed）:<font color=\"info\"> ${passed} 个</font>
+           - 失败用例个数（failed）: <font color=\"warning\"> ${failed}  个</font>
+           - 异常用例个数（error）: <font color=\"warning\"> ${broken} 个</font>
+           - 跳过用例个数（skipped）: <font color=\"comment\"> ${skipped} 个</font>
+           - 失败重试用例个数 * 次数之和（rerun）: <font color=\"comment\"> ${rerun} 个</font>
+           - 成  功   率: <font color=\"info\"> ${pass_rate} % </font>
+           附件为具体的测试报告，详细情况可下载附件查看， 非相关负责人员可忽略此消息。谢谢。
        """
