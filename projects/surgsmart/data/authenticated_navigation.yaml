@@ -1,0 +1,25 @@
+navigation_cases:
+  - title: "侧栏导航-视频库"
+    path: "/my-surgery"
+    heading: "视频库"
+    run: true
+  - title: "侧栏导航-虚拟手术室"
+    path: "/virtual-surgery-room-list"
+    heading: "虚拟手术室"
+    run: true
+  - title: "侧栏导航-收藏夹"
+    path: "/surgery-collection"
+    heading: "收藏夹"
+    run: true
+  - title: "侧栏导航-智能剪辑"
+    path: "/edit-video-list"
+    heading: "智能剪辑"
+    run: true
+  - title: "侧栏导航-技能成长"
+    path: "/skill-growth-record"
+    heading: "技能成长"
+    run: true
+  - title: "侧栏导航-病历资料"
+    path: "/my-case"
+    heading: "病历资料"
+    run: true
